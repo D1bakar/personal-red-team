@@ -38,19 +38,16 @@ export default function AnalyticsPage() {
     setMounted(true);
     const token = localStorage.getItem("token");
     if (!token) return;
-
     Promise.all([
       fetch("http://localhost:8000/api/v1/analytics/score", { headers: { Authorization: `Bearer ${token}` } }),
       fetch("http://localhost:8000/api/v1/analytics/vulnerabilities", { headers: { Authorization: `Bearer ${token}` } }),
-    ]).then(async ([scoreRes, vulnRes]) => {
-      if (scoreRes.ok) setScore(await scoreRes.json());
-      if (vulnRes.ok) setVulns(await vulnRes.json());
+    ]).then(async ([s, v]) => {
+      if (s.ok) setScore(await s.json());
+      if (v.ok) setVulns(await v.json());
     }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
-  if (loading) {
-    return <div className="flex items-center justify-center h-64"><div className="brutalist-tag animate-pulse">LOADING...</div></div>;
-  }
+  if (loading) return <div className="flex items-center justify-center h-64"><div className="brutalist-tag animate-pulse">LOADING...</div></div>;
 
   const vulnColor = (v: number) => {
     if (v >= 0.7) return "bg-[#FF3B3B]";
@@ -62,25 +59,19 @@ export default function AnalyticsPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-black uppercase tracking-tight">ANALYTICS</h1>
-        <p className="text-sm text-gray-500 font-mono mt-1">Your security posture & vulnerabilities</p>
+        <p className="text-sm text-gray-500 mt-1">Your security posture and vulnerabilities</p>
       </div>
 
       {score && (
         <div className="grid gap-6 lg:grid-cols-2">
           {/* Score */}
-          <div className={`brutalist-card p-6 animate-fade-up opacity-0 ${mounted ? "" : ""}`}>
+          <div className="brutalist-card p-6 animate-fade-up opacity-0">
             <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-6">SECURITY POSTURE</div>
             <div className="flex items-center justify-center mb-6">
               <div className="relative">
                 <svg className="h-44 w-44 -rotate-90">
                   <circle cx="80" cy="80" r="72" stroke="#E8E4DA" strokeWidth="10" fill="none" />
-                  <circle
-                    cx="80" cy="80" r="72"
-                    stroke="black" strokeWidth="10" fill="none"
-                    strokeDasharray={`${score.overall * 4.52} 452`}
-                    strokeLinecap="square"
-                    className="transition-all duration-1000"
-                  />
+                  <circle cx="80" cy="80" r="72" stroke="black" strokeWidth="10" fill="none" strokeDasharray={`${score.overall * 4.52} 452`} strokeLinecap="square" className="transition-all duration-1000" />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
                   <span className="text-5xl font-black">{score.overall}</span>
@@ -88,7 +79,6 @@ export default function AnalyticsPage() {
                 </div>
               </div>
             </div>
-
             <div className="space-y-4">
               {[
                 { label: "Simulation Defense", value: score.simulation_success_rate },
@@ -101,7 +91,7 @@ export default function AnalyticsPage() {
                     <span className="uppercase tracking-wider">{item.label}</span>
                     <span>{item.value}%</span>
                   </div>
-                  <div className="h-3 border-[2px] border-black bg-sand">
+                  <div className="h-3 border-[2px] border-black bg-[#E8E4DA]">
                     <div className="h-full bg-black transition-all duration-700" style={{ width: `${item.value}%` }} />
                   </div>
                 </div>
@@ -110,10 +100,9 @@ export default function AnalyticsPage() {
           </div>
 
           {/* Vulnerabilities */}
-          <div className={`brutalist-card p-6 animate-fade-up stagger-2 opacity-0 ${mounted ? "" : ""}`}>
+          <div className="brutalist-card p-6 animate-fade-up stagger-2 opacity-0">
             <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">VULNERABILITY PROFILE</div>
-            <p className="text-xs text-gray-400 font-mono mb-6">Your susceptibility to each attack type</p>
-
+            <p className="text-xs text-gray-400 mb-6">Susceptibility to each attack type</p>
             {vulns && (
               <div className="space-y-4">
                 {Object.entries(vulns).map(([key, value]) => (
@@ -122,7 +111,7 @@ export default function AnalyticsPage() {
                       <span className="uppercase tracking-wider">{vulnLabels[key] || key}</span>
                       <span>{Math.round(value * 100)}%</span>
                     </div>
-                    <div className="h-3 border-[2px] border-black bg-sand">
+                    <div className="h-3 border-[2px] border-black bg-[#E8E4DA]">
                       <div className={`h-full transition-all duration-700 ${vulnColor(value)}`} style={{ width: `${value * 100}%` }} />
                     </div>
                   </div>
@@ -134,7 +123,7 @@ export default function AnalyticsPage() {
       )}
 
       {/* RECOMMENDATIONS */}
-      <div className={`brutalist-card p-6 animate-fade-up stagger-3 opacity-0 ${mounted ? "" : ""}`}>
+      <div className="brutalist-card p-6 animate-fade-up stagger-3 opacity-0">
         <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">RECOMMENDATIONS</div>
         <div className="grid gap-3 sm:grid-cols-2">
           {[
@@ -144,9 +133,9 @@ export default function AnalyticsPage() {
             { title: "Stay Informed", desc: "Follow cybersecurity news for new tactics.", color: "bg-[#A855F7]" },
           ].map((rec) => (
             <div key={rec.title} className="border-[2px] border-black p-4">
-              <div className={`inline-flex h-6 w-6 items-center justify-center border-[2px] border-black ${rec.color} text-[10px] font-black mb-2`}>→</div>
+              <div className={`inline-flex h-6 w-6 items-center justify-center border-[2px] border-black ${rec.color} text-[10px] font-black mb-2`}>--&gt;</div>
               <h3 className="font-bold uppercase tracking-wider text-sm mb-1">{rec.title}</h3>
-              <p className="text-xs text-gray-500 font-mono">{rec.desc}</p>
+              <p className="text-xs text-gray-500 leading-relaxed">{rec.desc}</p>
             </div>
           ))}
         </div>

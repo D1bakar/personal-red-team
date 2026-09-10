@@ -15,21 +15,18 @@ export default function SettingsPage() {
     if (userData) setUser(JSON.parse(userData));
   }, []);
 
-  const handleSave = () => {
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
-  };
+  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-black uppercase tracking-tight">SETTINGS</h1>
-        <p className="text-sm text-gray-500 font-mono mt-1">Configure your experience</p>
+        <p className="text-sm text-gray-500 mt-1">Configure your experience</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
         {/* Profile */}
-        <div className={`brutalist-card p-6 animate-fade-up opacity-0 ${mounted ? "" : ""}`}>
+        <div className="brutalist-card p-6 animate-fade-up opacity-0">
           <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">PROFILE</div>
           {user && (
             <div className="space-y-3">
@@ -49,8 +46,8 @@ export default function SettingsPage() {
           )}
         </div>
 
-        {/* Simulation Settings */}
-        <div className={`brutalist-card p-6 animate-fade-up stagger-2 opacity-0 ${mounted ? "" : ""}`}>
+        {/* Simulation Config */}
+        <div className="brutalist-card p-6 animate-fade-up stagger-2 opacity-0">
           <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">SIMULATION CONFIG</div>
           <div className="space-y-6">
             <div>
@@ -58,14 +55,8 @@ export default function SettingsPage() {
                 <span className="uppercase tracking-wider">FREQUENCY</span>
                 <span>EVERY {frequency}H</span>
               </div>
-              <input
-                type="range" min="6" max="168" step="6" value={frequency}
-                onChange={(e) => setFrequency(Number(e.target.value))}
-                className="w-full accent-black"
-              />
-              <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-1">
-                <span>6H</span><span>1 WEEK</span>
-              </div>
+              <input type="range" min="6" max="168" step="6" value={frequency} onChange={(e) => setFrequency(Number(e.target.value))} className="w-full accent-black" />
+              <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-1"><span>6H</span><span>1 WEEK</span></div>
             </div>
             <div>
               <div className="flex justify-between text-xs font-bold mb-2">
@@ -74,15 +65,7 @@ export default function SettingsPage() {
               </div>
               <div className="flex gap-2">
                 {[1, 2, 3, 4, 5].map((level) => (
-                  <button
-                    key={level}
-                    onClick={() => setDifficulty(level)}
-                    className={`flex-1 h-10 border-[3px] border-black font-black text-sm transition-all duration-150 ${
-                      level <= difficulty ? "bg-black text-cream" : "bg-white"
-                    }`}
-                  >
-                    {level}
-                  </button>
+                  <button key={level} onClick={() => setDifficulty(level)} className={`flex-1 h-10 border-[3px] border-black font-black text-sm transition-all duration-150 ${level <= difficulty ? "bg-black text-[#FFFBF0]" : "bg-white"}`}>{level}</button>
                 ))}
               </div>
             </div>
@@ -90,7 +73,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Privacy */}
-        <div className={`brutalist-card p-6 animate-fade-up stagger-3 opacity-0 ${mounted ? "" : ""}`}>
+        <div className="brutalist-card p-6 animate-fade-up stagger-3 opacity-0">
           <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">PRIVACY</div>
           <div className="space-y-3">
             {[
@@ -100,9 +83,9 @@ export default function SettingsPage() {
               <div key={item.label} className="flex items-center justify-between border-[2px] border-black p-3">
                 <div>
                   <div className="font-bold text-sm">{item.label}</div>
-                  <div className="text-[10px] text-gray-500 font-mono">{item.desc}</div>
+                  <div className="text-[10px] text-gray-500">{item.desc}</div>
                 </div>
-                <div className={`h-6 w-12 border-[2px] border-black relative cursor-pointer ${item.enabled ? "bg-[#22C55E]" : "bg-sand"}`}>
+                <div className={`h-6 w-12 border-[2px] border-black relative ${item.enabled ? "bg-[#22C55E]" : "bg-[#E8E4DA]"}`}>
                   <div className={`absolute top-0.5 h-4 w-4 border-[2px] border-black transition-all duration-200 ${item.enabled ? "left-5 bg-black" : "left-0.5 bg-white"}`} />
                 </div>
               </div>
@@ -111,9 +94,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <button onClick={handleSave} className="brutalist-btn">
-        {saved ? "SAVED ✓" : "SAVE SETTINGS"}
-      </button>
+      <button onClick={handleSave} className="brutalist-btn">{saved ? "SAVED" : "SAVE SETTINGS"}</button>
     </div>
   );
 }

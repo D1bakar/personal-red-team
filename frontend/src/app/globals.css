@@ -3,22 +3,28 @@
 @tailwind utilities;
 
 @layer base {
-  * {
-    @apply border-black;
+  html {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
   }
 
   body {
-    @apply bg-[#FFFBF0] text-black font-mono antialiased;
+    @apply bg-[#FFFBF0] text-black font-mono antialiased overflow-x-hidden;
+    min-height: 100vh;
   }
 
   ::selection {
     @apply bg-black text-[#FFFBF0];
   }
+
+  input, textarea, select, button {
+    @apply font-mono;
+  }
 }
 
 @layer components {
   .brutalist-card {
-    @apply bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] transition-all duration-200;
+    @apply bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] transition-all duration-200 overflow-hidden;
   }
 
   .brutalist-card:hover {
@@ -26,87 +32,63 @@
   }
 
   .brutalist-btn {
-    @apply bg-black text-[#FFFBF0] border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#FFFBF0] hover:shadow-[1px_1px_0px_0px_#FFFBF0] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer;
+    @apply bg-black text-[#FFFBF0] border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#FFFBF0] hover:shadow-[1px_1px_0px_0px_#FFFBF0] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer whitespace-nowrap inline-flex items-center justify-center;
   }
 
   .brutalist-btn-outline {
-    @apply bg-transparent text-black border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#000] hover:bg-black hover:text-[#FFFBF0] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer;
-  }
-
-  .brutalist-btn-danger {
-    @apply bg-[#FF3B3B] text-black border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer;
-  }
-
-  .brutalist-btn-success {
-    @apply bg-[#22C55E] text-black border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer;
-  }
-
-  .brutalist-btn-warning {
-    @apply bg-[#FBBF24] text-black border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#000] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer;
+    @apply bg-transparent text-black border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#000] hover:bg-black hover:text-[#FFFBF0] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer whitespace-nowrap inline-flex items-center justify-center;
   }
 
   .brutalist-input {
-    @apply w-full bg-white border-[3px] border-black px-4 py-2.5 font-mono text-sm placeholder:text-gray-400 focus:outline-none focus:shadow-[3px_3px_0px_0px_#000] focus:translate-x-[-1px] focus:translate-y-[-1px] transition-all duration-150;
+    @apply w-full bg-white border-[3px] border-black px-4 py-2.5 font-mono text-sm placeholder:text-gray-400 focus:outline-none focus:shadow-[3px_3px_0px_0px_#000] focus:translate-x-[-1px] focus:translate-y-[-1px] transition-all duration-150 box-border;
   }
 
   .brutalist-badge {
-    @apply inline-flex items-center border-[2px] border-black px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider;
+    @apply inline-flex items-center border-[2px] border-black px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider shrink-0;
   }
 
   .brutalist-tag {
-    @apply inline-flex items-center border-[2px] border-black bg-[#E8E4DA] px-2 py-0.5 text-xs font-bold uppercase;
+    @apply inline-flex items-center border-[2px] border-black bg-[#E8E4DA] px-2 py-0.5 text-xs font-bold uppercase shrink-0;
   }
 }
 
 @layer utilities {
   .animate-brutalist-in {
-    animation: brutalistIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: brutalistIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .animate-fade-up {
-    animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .animate-fade-in {
-    animation: fadeIn 0.3s ease forwards;
+    animation: fadeIn 0.3s ease both;
   }
 
   .animate-slide-in-left {
-    animation: slideInLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: slideInLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
   .animate-pop {
-    animation: pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 
-  .stagger-1 { animation-delay: 0.05s; }
-  .stagger-2 { animation-delay: 0.1s; }
-  .stagger-3 { animation-delay: 0.15s; }
-  .stagger-4 { animation-delay: 0.2s; }
-  .stagger-5 { animation-delay: 0.25s; }
-  .stagger-6 { animation-delay: 0.3s; }
+  .stagger-1 { animation-delay: 50ms; }
+  .stagger-2 { animation-delay: 100ms; }
+  .stagger-3 { animation-delay: 150ms; }
+  .stagger-4 { animation-delay: 200ms; }
+  .stagger-5 { animation-delay: 250ms; }
+  .stagger-6 { animation-delay: 300ms; }
 }
 
 @keyframes brutalistIn {
-  from {
-    opacity: 0;
-    transform: translateY(8px) scale(0.98);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-  }
+  from { opacity: 0; transform: translateY(8px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
 }
 
 @keyframes fadeUp {
-  from {
-    opacity: 0;
-    transform: translateY(12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes fadeIn {
@@ -115,39 +97,16 @@
 }
 
 @keyframes slideInLeft {
-  from {
-    opacity: 0;
-    transform: translateX(-12px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+  from { opacity: 0; transform: translateX(-12px); }
+  to { opacity: 1; transform: translateX(0); }
 }
 
 @keyframes pop {
-  0% {
-    opacity: 0;
-    transform: scale(0.9);
-  }
-  70% {
-    transform: scale(1.02);
-  }
-  100% {
-    opacity: 1;
-    transform: scale(1);
-  }
+  0% { opacity: 0; transform: scale(0.9); }
+  70% { transform: scale(1.02); }
+  100% { opacity: 1; transform: scale(1); }
 }
 
-/* Scrollbar styling */
-::-webkit-scrollbar {
-  width: 8px;
-}
-
-::-webkit-scrollbar-track {
-  @apply bg-[#E8E4DA];
-}
-
-::-webkit-scrollbar-thumb {
-  @apply bg-black border border-black;
-}
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: #E8E4DA; }
+::-webkit-scrollbar-thumb { background: #000; border: 1px solid #000; }
