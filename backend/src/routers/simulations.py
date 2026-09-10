@@ -1,7 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
-from uuid import UUID
 from datetime import datetime, timezone
 from src.core.database import get_db
 from src.core.security import get_current_user
@@ -38,7 +37,7 @@ async def generate_simulation(
 
 @router.post("/{simulation_id}/interact", response_model=SimulationResponse)
 async def record_interaction(
-    simulation_id: UUID,
+    simulation_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
@@ -52,7 +51,7 @@ async def record_interaction(
     if not simulation:
         raise HTTPException(status_code=404, detail="Simulation not found")
 
-    simulation.status = SimulationStatus.INTERACTED
+    simulation.status = SimulationStatus.INTERACTED.value
     simulation.interacted_at = datetime.now(timezone.utc)
     await db.flush()
     await db.refresh(simulation)
@@ -61,7 +60,7 @@ async def record_interaction(
 
 @router.post("/{simulation_id}/reveal", response_model=SimulationReveal)
 async def reveal_simulation(
-    simulation_id: UUID,
+    simulation_id: str,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):

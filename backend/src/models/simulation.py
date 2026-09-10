@@ -1,7 +1,6 @@
 import uuid
 from datetime import datetime, timezone
-from sqlalchemy import Column, String, DateTime, Enum, Text, Boolean, Integer
-from sqlalchemy.dialects.postgresql import UUID, ARRAY
+from sqlalchemy import Column, String, DateTime, Enum, Text, Boolean, Integer, JSON
 from src.core.database import Base
 import enum
 
@@ -28,12 +27,12 @@ class SimulationStatus(str, enum.Enum):
 class Simulation(Base):
     __tablename__ = "simulations"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), nullable=False, index=True)
-    type = Column(Enum(SimulationType), nullable=False)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, nullable=False, index=True)
+    type = Column(String, nullable=False)
     scenario_name = Column(String, nullable=False)
-    psychological_triggers = Column(ARRAY(String), default=[])
-    status = Column(Enum(SimulationStatus), default=SimulationStatus.PENDING)
+    psychological_triggers = Column(JSON, default=[])
+    status = Column(String, default=SimulationStatus.PENDING.value)
     content = Column(Text, nullable=False)
     delivered_at = Column(DateTime(timezone=True), nullable=True)
     interacted_at = Column(DateTime(timezone=True), nullable=True)
@@ -43,10 +42,10 @@ class Simulation(Base):
 class SimulationConfig(Base):
     __tablename__ = "simulation_configs"
 
-    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
-    user_id = Column(UUID(as_uuid=True), unique=True, nullable=False, index=True)
+    id = Column(String, primary_key=True, default=lambda: str(uuid.uuid4()))
+    user_id = Column(String, unique=True, nullable=False, index=True)
     frequency_hours = Column(Integer, default=24)
-    enabled_types = Column(ARRAY(String), default=[t.value for t in SimulationType])
+    enabled_types = Column(JSON, default=[t.value for t in SimulationType])
     difficulty_level = Column(Integer, default=3)
     is_active = Column(Boolean, default=True)
     created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))

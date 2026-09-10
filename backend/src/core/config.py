@@ -7,8 +7,7 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
     API_V1_PREFIX: str = "/api/v1"
 
-    DATABASE_URL: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/personal_red_team"
-    DATABASE_URL_SYNC: str = "postgresql://postgres:postgres@localhost:5432/personal_red_team"
+    DATABASE_URL: str = "sqlite+aiosqlite:///./personal_red_team.db"
 
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"

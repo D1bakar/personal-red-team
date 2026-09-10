@@ -1,21 +1,19 @@
 from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
-from src.models.simulation import SimulationType, SimulationStatus
 
 
 class SimulationCreate(BaseModel):
-    type: SimulationType | None = None
+    type: str | None = None
     difficulty_level: int | None = None
 
 
 class SimulationResponse(BaseModel):
-    id: UUID
-    user_id: UUID
-    type: SimulationType
+    id: str
+    user_id: str
+    type: str
     scenario_name: str
     psychological_triggers: list[str]
-    status: SimulationStatus
+    status: str
     content: str
     delivered_at: datetime | None
     interacted_at: datetime | None
@@ -27,13 +25,13 @@ class SimulationResponse(BaseModel):
 
 class SimulationConfigCreate(BaseModel):
     frequency_hours: int = 24
-    enabled_types: list[SimulationType] = list(SimulationType)
+    enabled_types: list[str] = []
     difficulty_level: int = 3
     is_active: bool = True
 
 
 class SimulationReveal(BaseModel):
-    simulation_id: UUID
+    simulation_id: str
     psychological_triggers: list[str]
     explanation: str
     defense_tips: list[str]

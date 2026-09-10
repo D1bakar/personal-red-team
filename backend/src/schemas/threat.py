@@ -1,7 +1,5 @@
 from pydantic import BaseModel
-from uuid import UUID
 from datetime import datetime
-from src.models.threat import ThreatLevel
 
 
 class ThreatAnalysisCreate(BaseModel):
@@ -9,9 +7,9 @@ class ThreatAnalysisCreate(BaseModel):
 
 
 class ThreatAnalysisResponse(BaseModel):
-    id: UUID
+    id: str
     input_text: str
-    threat_level: ThreatLevel
+    threat_level: str
     threat_score: float
     triggers: list[str]
     explanation: str

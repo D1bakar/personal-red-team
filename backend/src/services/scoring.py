@@ -1,12 +1,12 @@
-from uuid import UUID
+import json
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-from src.models.simulation import Simulation, SimulationStatus, SimulationType
+from sqlalchemy import select, func, text
+from src.models.simulation import Simulation, SimulationStatus
 from src.models.threat import ThreatAnalysis, ThreatLevel
 
 
 class ScoringService:
-    async def calculate_score(self, db: AsyncSession, user_id: UUID) -> dict:
+    async def calculate_score(self, db: AsyncSession, user_id: str) -> dict:
         total_sims = await db.execute(
             select(func.count()).select_from(Simulation).where(Simulation.user_id == user_id)
         )
@@ -15,7 +15,7 @@ class ScoringService:
         ignored_sims = await db.execute(
             select(func.count()).select_from(Simulation).where(
                 Simulation.user_id == user_id,
-                Simulation.status == SimulationStatus.IGNORED,
+                Simulation.status == SimulationStatus.IGNORED.value,
             )
         )
         ignored_count = ignored_sims.scalar() or 0
@@ -28,7 +28,7 @@ class ScoringService:
         danger_caught = await db.execute(
             select(func.count()).select_from(ThreatAnalysis).where(
                 ThreatAnalysis.user_id == user_id,
-                ThreatAnalysis.threat_level.in_([ThreatLevel.DANGER, ThreatLevel.CAUTION]),
+                ThreatAnalysis.threat_level.in_([ThreatLevel.DANGER.value, ThreatLevel.CAUTION.value]),
             )
         )
         danger_caught_count = danger_caught.scalar() or 0
@@ -61,31 +61,30 @@ class ScoringService:
             "recency": round(recency, 1),
         }
 
-    async def get_vulnerability_profile(self, db: AsyncSession, user_id: UUID) -> dict:
+    async def get_vulnerability_profile(self, db: AsyncSession, user_id: str) -> dict:
+        result = await db.execute(
+            select(Simulation.psychological_triggers, Simulation.status).where(
+                Simulation.user_id == user_id
+            )
+        )
+        rows = result.all()
+
+        trigger_stats = {}
+        for triggers, status in rows:
+            if triggers:
+                for trigger in triggers:
+                    if trigger not in trigger_stats:
+                        trigger_stats[trigger] = {"total": 0, "interacted": 0}
+                    trigger_stats[trigger]["total"] += 1
+                    if status == SimulationStatus.INTERACTED.value:
+                        trigger_stats[trigger]["interacted"] += 1
+
         profile = {}
         for trigger in ["urgency", "fear", "authority", "greed", "curiosity", "secrecy"]:
-            sims_with_trigger = await db.execute(
-                select(func.count()).select_from(Simulation).where(
-                    Simulation.user_id == user_id,
-                    Simulation.psychological_triggers.any(trigger),
-                )
-            )
-            interacted_with_trigger = await db.execute(
-                select(func.count()).select_from(Simulation).where(
-                    Simulation.user_id == user_id,
-                    Simulation.psychological_triggers.any(trigger),
-                    Simulation.status == SimulationStatus.INTERACTED,
-                )
-            )
-
-            total = sims_with_trigger.scalar() or 0
-            interacted = interacted_with_trigger.scalar() or 0
-
-            if total > 0:
-                vulnerability = interacted / total
+            if trigger in trigger_stats and trigger_stats[trigger]["total"] > 0:
+                vulnerability = trigger_stats[trigger]["interacted"] / trigger_stats[trigger]["total"]
             else:
                 vulnerability = 0.5
-
             profile[trigger] = round(vulnerability, 2)
 
         return profile

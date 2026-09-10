@@ -1,5 +1,4 @@
 import random
-from uuid import UUID
 from datetime import datetime, timezone
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.simulation import Simulation, SimulationType, SimulationStatus
@@ -157,7 +156,7 @@ REVEAL_INFO = {
 
 
 class SimulationEngine:
-    async def create_simulation(self, db: AsyncSession, user_id: UUID) -> Simulation:
+    async def create_simulation(self, db: AsyncSession, user_id: str) -> Simulation:
         sim_type = random.choice(list(SimulationType))
         scenario = random.choice(SCENARIOS[sim_type])
 

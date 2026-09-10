@@ -1,5 +1,4 @@
 from pydantic import BaseModel, EmailStr
-from uuid import UUID
 from datetime import datetime
 
 
@@ -15,7 +14,7 @@ class UserLogin(BaseModel):
 
 
 class UserResponse(BaseModel):
-    id: UUID
+    id: str
     email: str
     name: str
     security_score: float

@@ -1,5 +1,4 @@
 import re
-from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 from src.models.threat import ThreatAnalysis, ThreatLevel
 from src.schemas.threat import ThreatAnalysisResponse
@@ -68,7 +67,7 @@ class ThreatAnalyzer:
         ]
         return any(re.search(p, text.lower()) for p in patterns)
 
-    def analyze(self, db: AsyncSession, user_id: UUID, text: str) -> ThreatAnalysis:
+    def analyze(self, db: AsyncSession, user_id: str, text: str) -> ThreatAnalysis:
         urgency_score = self._count_keyword_matches(text, URGENCY_KEYWORDS)
         fear_score = self._count_keyword_matches(text, FEAR_KEYWORDS)
         authority_score = self._count_keyword_matches(text, AUTHORITY_KEYWORDS)
@@ -100,11 +99,11 @@ class ThreatAnalyzer:
             triggers.append("curiosity")
 
         if total_score >= 8:
-            threat_level = ThreatLevel.DANGER
+            threat_level = ThreatLevel.DANGER.value
         elif total_score >= 4:
-            threat_level = ThreatLevel.CAUTION
+            threat_level = ThreatLevel.CAUTION.value
         else:
-            threat_level = ThreatLevel.SAFE
+            threat_level = ThreatLevel.SAFE.value
 
         threat_score = min(total_score / 15.0, 1.0)
 

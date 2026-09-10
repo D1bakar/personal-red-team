@@ -18,7 +18,9 @@ async def analyze_threat(
     db: AsyncSession = Depends(get_db),
 ):
     analyzer = ThreatAnalyzer()
-    analysis = await analyzer.analyze(db, current_user.id, data.input_text)
+    analysis = analyzer.analyze(db, current_user.id, data.input_text)
+    await db.flush()
+    await db.refresh(analysis)
     return ThreatAnalysisResponse.model_validate(analysis)
 
 
