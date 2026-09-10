@@ -1,15 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Settings, User, Bell, Shield } from "lucide-react";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
   const [frequency, setFrequency] = useState(24);
   const [difficulty, setDifficulty] = useState(3);
   const [saved, setSaved] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const userData = localStorage.getItem("user");
     if (userData) setUser(JSON.parse(userData));
   }, []);
@@ -22,116 +23,96 @@ export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Settings</h1>
-        <p className="text-surface-400">Configure your Personal Red Team experience</p>
+        <h1 className="text-3xl font-black uppercase tracking-tight">SETTINGS</h1>
+        <p className="text-sm text-gray-500 font-mono mt-1">Configure your experience</p>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-2">
-        <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <User className="h-5 w-5 text-primary-400" />
-            <h2 className="text-lg font-semibold text-white">Profile</h2>
-          </div>
-
+        {/* Profile */}
+        <div className={`brutalist-card p-6 animate-fade-up opacity-0 ${mounted ? "" : ""}`}>
+          <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">PROFILE</div>
           {user && (
-            <div className="space-y-4">
-              <div>
-                <label className="mb-1 block text-sm text-surface-400">Name</label>
-                <p className="text-white">{user.name}</p>
+            <div className="space-y-3">
+              <div className="border-[2px] border-black p-3">
+                <div className="text-[10px] font-bold uppercase text-gray-500">NAME</div>
+                <div className="font-bold">{user.name}</div>
               </div>
-              <div>
-                <label className="mb-1 block text-sm text-surface-400">Email</label>
-                <p className="text-white">{user.email}</p>
+              <div className="border-[2px] border-black p-3">
+                <div className="text-[10px] font-bold uppercase text-gray-500">EMAIL</div>
+                <div className="font-bold">{user.email}</div>
               </div>
-              <div>
-                <label className="mb-1 block text-sm text-surface-400">Security Score</label>
-                <p className="text-primary-400 font-bold">{user.security_score}</p>
+              <div className="border-[2px] border-black p-3">
+                <div className="text-[10px] font-bold uppercase text-gray-500">SECURITY SCORE</div>
+                <div className="font-black text-2xl">{user.security_score}</div>
               </div>
             </div>
           )}
         </div>
 
-        <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Bell className="h-5 w-5 text-warning-400" />
-            <h2 className="text-lg font-semibold text-white">Simulation Settings</h2>
-          </div>
-
-          <div className="space-y-4">
+        {/* Simulation Settings */}
+        <div className={`brutalist-card p-6 animate-fade-up stagger-2 opacity-0 ${mounted ? "" : ""}`}>
+          <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">SIMULATION CONFIG</div>
+          <div className="space-y-6">
             <div>
-              <label className="mb-2 block text-sm text-surface-300">
-                Simulation Frequency: Every {frequency} hours
-              </label>
+              <div className="flex justify-between text-xs font-bold mb-2">
+                <span className="uppercase tracking-wider">FREQUENCY</span>
+                <span>EVERY {frequency}H</span>
+              </div>
               <input
-                type="range"
-                min="6"
-                max="168"
-                step="6"
-                value={frequency}
+                type="range" min="6" max="168" step="6" value={frequency}
                 onChange={(e) => setFrequency(Number(e.target.value))}
-                className="w-full accent-primary-500"
+                className="w-full accent-black"
               />
-              <div className="flex justify-between text-xs text-surface-500">
-                <span>6h</span>
-                <span>1 week</span>
+              <div className="flex justify-between text-[10px] font-bold text-gray-400 mt-1">
+                <span>6H</span><span>1 WEEK</span>
               </div>
             </div>
-
             <div>
-              <label className="mb-2 block text-sm text-surface-300">
-                Difficulty Level: {difficulty}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="5"
-                step="1"
-                value={difficulty}
-                onChange={(e) => setDifficulty(Number(e.target.value))}
-                className="w-full accent-primary-500"
-              />
-              <div className="flex justify-between text-xs text-surface-500">
-                <span>Easy</span>
-                <span>Hard</span>
+              <div className="flex justify-between text-xs font-bold mb-2">
+                <span className="uppercase tracking-wider">DIFFICULTY</span>
+                <span>LEVEL {difficulty}</span>
+              </div>
+              <div className="flex gap-2">
+                {[1, 2, 3, 4, 5].map((level) => (
+                  <button
+                    key={level}
+                    onClick={() => setDifficulty(level)}
+                    className={`flex-1 h-10 border-[3px] border-black font-black text-sm transition-all duration-150 ${
+                      level <= difficulty ? "bg-black text-cream" : "bg-white"
+                    }`}
+                  >
+                    {level}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
         </div>
 
-        <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-          <div className="flex items-center gap-2 mb-4">
-            <Shield className="h-5 w-5 text-success-400" />
-            <h2 className="text-lg font-semibold text-white">Privacy</h2>
-          </div>
-
+        {/* Privacy */}
+        <div className={`brutalist-card p-6 animate-fade-up stagger-3 opacity-0 ${mounted ? "" : ""}`}>
+          <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">PRIVACY</div>
           <div className="space-y-3">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white">Local AI Processing</p>
-                <p className="text-sm text-surface-400">Analyze threats in your browser</p>
+            {[
+              { label: "Local AI Processing", desc: "Analyze in browser", enabled: true },
+              { label: "Cloud Analysis", desc: "Enhanced detection", enabled: true },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center justify-between border-[2px] border-black p-3">
+                <div>
+                  <div className="font-bold text-sm">{item.label}</div>
+                  <div className="text-[10px] text-gray-500 font-mono">{item.desc}</div>
+                </div>
+                <div className={`h-6 w-12 border-[2px] border-black relative cursor-pointer ${item.enabled ? "bg-[#22C55E]" : "bg-sand"}`}>
+                  <div className={`absolute top-0.5 h-4 w-4 border-[2px] border-black transition-all duration-200 ${item.enabled ? "left-5 bg-black" : "left-0.5 bg-white"}`} />
+                </div>
               </div>
-              <div className="h-6 w-11 rounded-full bg-success-500 relative">
-                <div className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white" />
-              </div>
-            </div>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white">Cloud Analysis</p>
-                <p className="text-sm text-surface-400">Enhanced detection via server</p>
-              </div>
-              <div className="h-6 w-11 rounded-full bg-success-500 relative">
-                <div className="absolute right-0.5 top-0.5 h-5 w-5 rounded-full bg-white" />
-              </div>
-            </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <button
-        onClick={handleSave}
-        className="rounded-lg bg-primary-600 px-6 py-2.5 font-medium text-white hover:bg-primary-700 transition-colors"
-      >
-        {saved ? "Saved!" : "Save Settings"}
+      <button onClick={handleSave} className="brutalist-btn">
+        {saved ? "SAVED ✓" : "SAVE SETTINGS"}
       </button>
     </div>
   );

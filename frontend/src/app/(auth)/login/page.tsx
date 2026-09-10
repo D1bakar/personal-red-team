@@ -27,9 +27,7 @@ export default function LoginPage() {
         body: formData.toString(),
       });
 
-      if (!res.ok) {
-        throw new Error("Invalid credentials");
-      }
+      if (!res.ok) throw new Error("Invalid credentials");
 
       const data = await res.json();
       localStorage.setItem("token", data.access_token);
@@ -43,57 +41,50 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="rounded-xl border border-surface-800 bg-surface-900 p-8">
-      <h2 className="mb-6 text-xl font-semibold text-white">Sign In</h2>
+    <div className="brutalist-card p-8 animate-brutalist-in">
+      <h2 className="text-2xl font-black uppercase tracking-wider mb-1">WELCOME BACK</h2>
+      <p className="text-sm text-gray-500 font-mono mb-6">Sign in to your account</p>
 
       {error && (
-        <div className="mb-4 rounded-lg bg-danger-500/10 border border-danger-500/20 p-3 text-sm text-danger-400">
+        <div className="border-[3px] border-black bg-[#FF3B3B] p-3 mb-4 text-sm font-bold uppercase">
           {error}
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="mb-1 block text-sm font-medium text-surface-300">
-            Email
-          </label>
+          <label className="mb-1 block text-xs font-bold uppercase tracking-wider">Email</label>
           <input
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
-            className="w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-2 text-white placeholder-surface-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="brutalist-input"
             placeholder="you@example.com"
           />
         </div>
 
         <div>
-          <label className="mb-1 block text-sm font-medium text-surface-300">
-            Password
-          </label>
+          <label className="mb-1 block text-xs font-bold uppercase tracking-wider">Password</label>
           <input
             type="password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
-            className="w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-2 text-white placeholder-surface-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
+            className="brutalist-input"
             placeholder="••••••••"
           />
         </div>
 
-        <button
-          type="submit"
-          disabled={loading}
-          className="w-full rounded-lg bg-primary-600 py-2.5 font-medium text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
-        >
-          {loading ? "Signing in..." : "Sign In"}
+        <button type="submit" disabled={loading} className="brutalist-btn w-full">
+          {loading ? "SIGNING IN..." : "SIGN IN →"}
         </button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-surface-400">
-        Don&apos;t have an account?{" "}
-        <Link href="/register" className="text-primary-400 hover:text-primary-300">
-          Sign up
+      <p className="mt-6 text-center text-sm text-gray-500">
+        No account?{" "}
+        <Link href="/register" className="font-bold text-black underline decoration-[3px] decoration-black underline-offset-4 hover:bg-black hover:text-cream px-1 transition-colors">
+          Create one
         </Link>
       </p>
     </div>

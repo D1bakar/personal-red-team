@@ -1,19 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import { Brain, Search, AlertTriangle, Shield, CheckCircle } from "lucide-react";
 import { useAIThreatDetection } from "@/hooks/useAIThreatDetection";
 
 export default function ThreatsPage() {
-  const [inputText, setInputText] = useState("");
+  const [input, setInput] = useState("");
   const [serverResult, setServerResult] = useState<any>(null);
   const [serverLoading, setServerLoading] = useState(false);
+  const [mounted, setMounted] = useState(true);
   const { analyze, isAnalyzing, result: clientResult, error: clientError } = useAIThreatDetection();
 
   const handleAnalyze = async () => {
-    if (!inputText.trim()) return;
-
-    analyze(inputText);
+    if (!input.trim()) return;
+    analyze(input);
 
     const token = localStorage.getItem("token");
     if (token) {
@@ -21,128 +20,92 @@ export default function ThreatsPage() {
       try {
         const res = await fetch("http://localhost:8000/api/v1/threats/analyze", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ input_text: inputText }),
+          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+          body: JSON.stringify({ input_text: input }),
         });
         if (res.ok) setServerResult(await res.json());
       } catch (err) {
-        console.error("Server analysis failed:", err);
+        console.error(err);
       } finally {
         setServerLoading(false);
       }
     }
   };
 
-  const getThreatIcon = (level: string) => {
-    switch (level) {
-      case "danger":
-        return <AlertTriangle className="h-6 w-6 text-danger-400" />;
-      case "caution":
-        return <AlertTriangle className="h-6 w-6 text-warning-400" />;
-      default:
-        return <Shield className="h-6 w-6 text-success-400" />;
-    }
+  const threatColor = (level: string) => {
+    if (level === "danger") return "border-l-[#FF3B3B] bg-[#FF3B3B]/5";
+    if (level === "caution") return "border-l-[#FBBF24] bg-[#FBBF24]/5";
+    return "border-l-[#22C55E] bg-[#22C55E]/5";
   };
 
-  const getThreatColor = (level: string) => {
-    switch (level) {
-      case "danger":
-        return "border-danger-500/30 bg-danger-500/10";
-      case "caution":
-        return "border-warning-500/30 bg-warning-500/10";
-      default:
-        return "border-success-500/30 bg-success-500/10";
-    }
+  const threatBadge = (level: string) => {
+    if (level === "danger") return "bg-[#FF3B3B] text-white border-[#FF3B3B]";
+    if (level === "caution") return "bg-[#FBBF24] border-[#FBBF24]";
+    return "bg-[#22C55E] border-[#22C55E]";
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Threat Detection</h1>
-        <p className="text-surface-400">Analyze messages for social engineering tactics</p>
+        <h1 className="text-3xl font-black uppercase tracking-tight">THREAT DETECTION</h1>
+        <p className="text-sm text-gray-500 font-mono mt-1">Analyze messages for social engineering</p>
       </div>
 
-      <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-        <label className="mb-2 block text-sm font-medium text-surface-300">
-          Paste a suspicious message below:
-        </label>
+      {/* INPUT */}
+      <div className="brutalist-card p-6">
+        <label className="block text-xs font-bold uppercase tracking-wider mb-2">SUSPICIOUS MESSAGE</label>
         <textarea
-          value={inputText}
-          onChange={(e) => setInputText(e.target.value)}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
           rows={4}
-          className="w-full rounded-lg border border-surface-700 bg-surface-800 px-4 py-3 text-white placeholder-surface-500 focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500 resize-none"
-          placeholder="e.g., URGENT: Your account has been suspended! Click here to verify your identity immediately or face permanent closure..."
+          className="brutalist-input resize-none mb-3"
+          placeholder="Paste a suspicious message here..."
         />
-        <button
-          onClick={handleAnalyze}
-          disabled={isAnalyzing || serverLoading || !inputText.trim()}
-          className="mt-3 flex items-center gap-2 rounded-lg bg-primary-600 px-6 py-2.5 font-medium text-white hover:bg-primary-700 disabled:opacity-50 transition-colors"
-        >
-          <Search className={`h-4 w-4 ${isAnalyzing || serverLoading ? "animate-pulse" : ""}`} />
-          {isAnalyzing || serverLoading ? "Analyzing..." : "Analyze Message"}
+        <button onClick={handleAnalyze} disabled={isAnalyzing || serverLoading || !input.trim()} className="brutalist-btn text-xs">
+          {isAnalyzing || serverLoading ? "ANALYZING..." : "ANALYZE MESSAGE →"}
         </button>
       </div>
 
+      {/* CLIENT RESULT */}
       {clientError && (
-        <div className="rounded-xl border border-danger-500/30 bg-danger-500/10 p-4">
-          <p className="text-danger-400">Client analysis error: {clientError}</p>
+        <div className="brutalist-card p-4 border-l-[8px] border-l-[#FF3B3B] bg-[#FF3B3B]/5">
+          <div className="text-xs font-bold uppercase text-[#FF3B3B]">ERROR: {clientError}</div>
         </div>
       )}
 
       {clientResult && (
-        <div className={`rounded-xl border ${getThreatColor(clientResult.threatLevel)} p-6`}>
-          <div className="flex items-center gap-3 mb-4">
-            {getThreatIcon(clientResult.threatLevel)}
+        <div className={`brutalist-card p-6 border-l-[8px] ${threatColor(clientResult.threatLevel)} animate-brutalist-in`}>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">
-                Client-Side Analysis
-              </h3>
-              <p className="text-sm text-surface-400">Detected locally in your browser</p>
+              <h3 className="font-black uppercase tracking-wider">CLIENT-SIDE ANALYSIS</h3>
+              <p className="text-xs text-gray-500 font-mono">Detected locally in browser</p>
             </div>
-            <div className="ml-auto">
-              <span className={`rounded-full px-3 py-1 text-sm font-medium ${
-                clientResult.threatLevel === "danger"
-                  ? "bg-danger-500/20 text-danger-400"
-                  : clientResult.threatLevel === "caution"
-                  ? "bg-warning-500/20 text-warning-400"
-                  : "bg-success-500/20 text-success-400"
-              }`}>
-                {clientResult.threatLevel.toUpperCase()}
-              </span>
-            </div>
+            <span className={`brutalist-badge ${threatBadge(clientResult.threatLevel)}`}>
+              {clientResult.threatLevel.toUpperCase()}
+            </span>
           </div>
 
-          <div className="grid gap-4 md:grid-cols-3 mb-4">
-            <div className="rounded-lg bg-surface-800/50 p-3">
-              <p className="text-xs text-surface-400">Sentiment</p>
-              <p className="font-medium text-white">
-                {clientResult.sentiment.label} ({(clientResult.sentiment.score * 100).toFixed(1)}%)
-              </p>
+          <div className="grid gap-3 sm:grid-cols-3 mb-4">
+            <div className="border-[2px] border-black p-3">
+              <div className="text-[10px] font-bold uppercase text-gray-500">SENTIMENT</div>
+              <div className="font-bold text-sm">{clientResult.sentiment.label} ({(clientResult.sentiment.score * 100).toFixed(0)}%)</div>
             </div>
-            <div className="rounded-lg bg-surface-800/50 p-3">
-              <p className="text-xs text-surface-400">Urgency Score</p>
-              <p className="font-medium text-white">{clientResult.urgencyScore}</p>
+            <div className="border-[2px] border-black p-3">
+              <div className="text-[10px] font-bold uppercase text-gray-500">URGENCY</div>
+              <div className="font-bold text-sm">{clientResult.urgencyScore}</div>
             </div>
-            <div className="rounded-lg bg-surface-800/50 p-3">
-              <p className="text-xs text-surface-400">Fear Score</p>
-              <p className="font-medium text-white">{clientResult.fearScore}</p>
+            <div className="border-[2px] border-black p-3">
+              <div className="text-[10px] font-bold uppercase text-gray-500">FEAR</div>
+              <div className="font-bold text-sm">{clientResult.fearScore}</div>
             </div>
           </div>
 
           {clientResult.triggers.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-surface-300 mb-2">Detected Triggers:</p>
+              <div className="text-xs font-bold uppercase tracking-wider mb-2">DETECTED TRIGGERS</div>
               <div className="flex flex-wrap gap-2">
-                {clientResult.triggers.map((trigger: string) => (
-                  <span
-                    key={trigger}
-                    className="rounded-full bg-surface-800 px-3 py-1 text-sm text-surface-300"
-                  >
-                    {trigger}
-                  </span>
+                {clientResult.triggers.map((t: string) => (
+                  <span key={t} className="brutalist-badge bg-black text-cream border-black">{t}</span>
                 ))}
               </div>
             </div>
@@ -150,49 +113,30 @@ export default function ThreatsPage() {
         </div>
       )}
 
+      {/* SERVER RESULT */}
       {serverResult && (
-        <div className={`rounded-xl border ${getThreatColor(serverResult.threat_level)} p-6`}>
-          <div className="flex items-center gap-3 mb-4">
-            {getThreatIcon(serverResult.threat_level)}
+        <div className={`brutalist-card p-6 border-l-[8px] ${threatColor(serverResult.threat_level)} animate-brutalist-in`}>
+          <div className="flex items-center justify-between mb-4">
             <div>
-              <h3 className="text-lg font-semibold text-white">
-                Server-Side Analysis
-              </h3>
-              <p className="text-sm text-surface-400">Deep analysis via Python NLP engine</p>
+              <h3 className="font-black uppercase tracking-wider">SERVER-SIDE ANALYSIS</h3>
+              <p className="text-xs text-gray-500 font-mono">Deep Python NLP analysis</p>
             </div>
-            <div className="ml-auto">
-              <span className={`rounded-full px-3 py-1 text-sm font-medium ${
-                serverResult.threat_level === "danger"
-                  ? "bg-danger-500/20 text-danger-400"
-                  : serverResult.threat_level === "caution"
-                  ? "bg-warning-500/20 text-warning-400"
-                  : "bg-success-500/20 text-success-400"
-              }`}>
-                {serverResult.threat_level.toUpperCase()}
-              </span>
-            </div>
+            <span className={`brutalist-badge ${threatBadge(serverResult.threat_level)}`}>
+              {serverResult.threat_level.toUpperCase()}
+            </span>
           </div>
 
-          <div className="mb-4">
-            <p className="text-sm text-surface-400">Threat Score: {(serverResult.threat_score * 100).toFixed(1)}%</p>
-          </div>
-
-          <div className="mb-4">
-            <p className="text-sm font-medium text-surface-300 mb-2">Analysis:</p>
-            <p className="text-surface-300">{serverResult.explanation}</p>
+          <div className="border-[2px] border-black p-3 mb-4">
+            <div className="text-[10px] font-bold uppercase text-gray-500 mb-1">ANALYSIS</div>
+            <p className="font-mono text-sm">{serverResult.explanation}</p>
           </div>
 
           {serverResult.triggers.length > 0 && (
             <div>
-              <p className="text-sm font-medium text-surface-300 mb-2">Detected Triggers:</p>
+              <div className="text-xs font-bold uppercase tracking-wider mb-2">DETECTED TRIGGERS</div>
               <div className="flex flex-wrap gap-2">
-                {serverResult.triggers.map((trigger: string) => (
-                  <span
-                    key={trigger}
-                    className="rounded-full bg-surface-800 px-3 py-1 text-sm text-surface-300"
-                  >
-                    {trigger}
-                  </span>
+                {serverResult.triggers.map((t: string) => (
+                  <span key={t} className="brutalist-badge bg-black text-cream border-black">{t}</span>
                 ))}
               </div>
             </div>
@@ -200,21 +144,22 @@ export default function ThreatsPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-        <h3 className="mb-4 text-lg font-semibold text-white">Example Messages to Test</h3>
+      {/* EXAMPLES */}
+      <div className="brutalist-card p-6">
+        <div className="text-xs font-bold uppercase tracking-wider mb-3">EXAMPLES TO TEST</div>
         <div className="space-y-2">
           {[
             "URGENT: Your bank account has been compromised! Call 1-800-555-0199 immediately to secure your funds.",
-            "Hey! It's been a while. I'm in trouble and need your help. Can you send me $500 through Venmo? I'll pay you back next week.",
-            "IRS NOTICE: You owe $12,500 in back taxes. A warrant will be issued for your arrest unless you pay immediately via gift cards.",
-            "Congratulations! You've won a $1,000,000 lottery prize! Click here to claim your reward before it expires.",
-          ].map((example, i) => (
+            "Hey! It's been a while. I'm in trouble and need your help. Can you send me $500 through Venmo?",
+            "IRS NOTICE: You owe $12,500 in back taxes. A warrant will be issued unless you pay immediately via gift cards.",
+            "Congratulations! You've won a $1,000,000 lottery prize! Click here to claim before it expires.",
+          ].map((ex, i) => (
             <button
               key={i}
-              onClick={() => setInputText(example)}
-              className="w-full rounded-lg border border-surface-700 p-3 text-left text-sm text-surface-300 hover:bg-surface-800 transition-colors"
+              onClick={() => setInput(ex)}
+              className="w-full text-left border-[2px] border-black p-3 text-xs font-mono hover:bg-black hover:text-cream transition-colors duration-150"
             >
-              &quot;{example}&quot;
+              &quot;{ex}&quot;
             </button>
           ))}
         </div>

@@ -1,23 +1,25 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
 import "./globals.css";
 
-const inter = Inter({ subsets: ["latin"] });
-
 export const metadata: Metadata = {
-  title: "Personal Red Team - AI Cybersecurity Defense",
-  description:
-    "AI-powered defense against social engineering and psychological exploitation",
+  title: "PRT — Personal Red Team",
+  description: "AI-powered defense against social engineering",
 };
 
 export default function RootLayout({
   children,
-}: Readonly<{
+}: {
   children: React.ReactNode;
-}>) {
+}) {
   return (
-    <html lang="en" className="dark">
-      <body className={inter.className}>{children}</body>
+    <html lang="en">
+      <head>
+        <link
+          href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap"
+          rel="stylesheet"
+        />
+      </head>
+      <body>{children}</body>
     </html>
   );
 }

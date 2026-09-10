@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Activity, TrendingUp, AlertTriangle } from "lucide-react";
 
 interface Score {
   overall: number;
@@ -20,180 +19,111 @@ interface Vulnerabilities {
   secrecy: number;
 }
 
+const vulnLabels: Record<string, string> = {
+  urgency: "Urgency-based scams",
+  fear: "Fear manipulation",
+  authority: "Authority impersonation",
+  greed: "Greed / financial bait",
+  curiosity: "Curiosity exploitation",
+  secrecy: "Secrecy requests",
+};
+
 export default function AnalyticsPage() {
   const [score, setScore] = useState<Score | null>(null);
-  const [vulnerabilities, setVulnerabilities] = useState<Vulnerabilities | null>(null);
+  const [vulns, setVulns] = useState<Vulnerabilities | null>(null);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
-    const fetchData = async () => {
-      const token = localStorage.getItem("token");
-      if (!token) return;
+    setMounted(true);
+    const token = localStorage.getItem("token");
+    if (!token) return;
 
-      try {
-        const [scoreRes, vulnRes] = await Promise.all([
-          fetch("http://localhost:8000/api/v1/analytics/score", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-          fetch("http://localhost:8000/api/v1/analytics/vulnerabilities", {
-            headers: { Authorization: `Bearer ${token}` },
-          }),
-        ]);
-
-        if (scoreRes.ok) setScore(await scoreRes.json());
-        if (vulnRes.ok) setVulnerabilities(await vulnRes.json());
-      } catch (err) {
-        console.error("Failed to fetch analytics:", err);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchData();
+    Promise.all([
+      fetch("http://localhost:8000/api/v1/analytics/score", { headers: { Authorization: `Bearer ${token}` } }),
+      fetch("http://localhost:8000/api/v1/analytics/vulnerabilities", { headers: { Authorization: `Bearer ${token}` } }),
+    ]).then(async ([scoreRes, vulnRes]) => {
+      if (scoreRes.ok) setScore(await scoreRes.json());
+      if (vulnRes.ok) setVulns(await vulnRes.json());
+    }).catch(console.error).finally(() => setLoading(false));
   }, []);
 
   if (loading) {
-    return (
-      <div className="flex items-center justify-center h-64">
-        <div className="text-surface-400">Loading analytics...</div>
-      </div>
-    );
+    return <div className="flex items-center justify-center h-64"><div className="brutalist-tag animate-pulse">LOADING...</div></div>;
   }
 
-  const getVulnerabilityLabel = (key: string) => {
-    const labels: Record<string, string> = {
-      urgency: "Urgency-based scams",
-      fear: "Fear-based manipulation",
-      authority: "Authority impersonation",
-      greed: "Greed/financial bait",
-      curiosity: "Curiosity exploitation",
-      secrecy: "Secrecy requests",
-    };
-    return labels[key] || key;
-  };
-
-  const getVulnerabilityColor = (value: number) => {
-    if (value >= 0.7) return "bg-danger-500";
-    if (value >= 0.4) return "bg-warning-500";
-    return "bg-success-500";
+  const vulnColor = (v: number) => {
+    if (v >= 0.7) return "bg-[#FF3B3B]";
+    if (v >= 0.4) return "bg-[#FBBF24]";
+    return "bg-[#22C55E]";
   };
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Analytics</h1>
-        <p className="text-surface-400">Your security posture and vulnerability profile</p>
+        <h1 className="text-3xl font-black uppercase tracking-tight">ANALYTICS</h1>
+        <p className="text-sm text-gray-500 font-mono mt-1">Your security posture & vulnerabilities</p>
       </div>
 
       {score && (
         <div className="grid gap-6 lg:grid-cols-2">
-          <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-            <h2 className="mb-6 text-lg font-semibold text-white">Security Posture Score</h2>
+          {/* Score */}
+          <div className={`brutalist-card p-6 animate-fade-up opacity-0 ${mounted ? "" : ""}`}>
+            <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-6">SECURITY POSTURE</div>
             <div className="flex items-center justify-center mb-6">
               <div className="relative">
-                <svg className="h-48 w-48 -rotate-90">
+                <svg className="h-44 w-44 -rotate-90">
+                  <circle cx="80" cy="80" r="72" stroke="#E8E4DA" strokeWidth="10" fill="none" />
                   <circle
-                    cx="96"
-                    cy="96"
-                    r="84"
-                    stroke="currentColor"
-                    strokeWidth="12"
-                    fill="none"
-                    className="text-surface-800"
-                  />
-                  <circle
-                    cx="96"
-                    cy="96"
-                    r="84"
-                    stroke="currentColor"
-                    strokeWidth="12"
-                    fill="none"
-                    strokeDasharray={`${score.overall * 5.28} 528`}
-                    className="text-primary-500"
-                    strokeLinecap="round"
+                    cx="80" cy="80" r="72"
+                    stroke="black" strokeWidth="10" fill="none"
+                    strokeDasharray={`${score.overall * 4.52} 452`}
+                    strokeLinecap="square"
+                    className="transition-all duration-1000"
                   />
                 </svg>
                 <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-5xl font-bold text-white">{score.overall}</span>
-                  <span className="text-sm text-surface-400">out of 100</span>
+                  <span className="text-5xl font-black">{score.overall}</span>
+                  <span className="text-xs font-bold uppercase text-gray-500">/100</span>
                 </div>
               </div>
             </div>
 
             <div className="space-y-4">
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-surface-400">Simulation Defense</span>
-                  <span className="text-white">{score.simulation_success_rate}%</span>
+              {[
+                { label: "Simulation Defense", value: score.simulation_success_rate },
+                { label: "Detection Accuracy", value: score.detection_accuracy },
+                { label: "Learning Progress", value: score.learning_completion },
+                { label: "Activity Recency", value: score.recency },
+              ].map((item) => (
+                <div key={item.label}>
+                  <div className="flex justify-between text-xs font-bold mb-1">
+                    <span className="uppercase tracking-wider">{item.label}</span>
+                    <span>{item.value}%</span>
+                  </div>
+                  <div className="h-3 border-[2px] border-black bg-sand">
+                    <div className="h-full bg-black transition-all duration-700" style={{ width: `${item.value}%` }} />
+                  </div>
                 </div>
-                <div className="h-3 rounded-full bg-surface-800">
-                  <div
-                    className="h-full rounded-full bg-primary-500 transition-all"
-                    style={{ width: `${score.simulation_success_rate}%` }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-surface-400">Detection Accuracy</span>
-                  <span className="text-white">{score.detection_accuracy}%</span>
-                </div>
-                <div className="h-3 rounded-full bg-surface-800">
-                  <div
-                    className="h-full rounded-full bg-success-500 transition-all"
-                    style={{ width: `${score.detection_accuracy}%` }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-surface-400">Learning Progress</span>
-                  <span className="text-white">{score.learning_completion}%</span>
-                </div>
-                <div className="h-3 rounded-full bg-surface-800">
-                  <div
-                    className="h-full rounded-full bg-warning-500 transition-all"
-                    style={{ width: `${score.learning_completion}%` }}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-surface-400">Activity Recency</span>
-                  <span className="text-white">{score.recency}%</span>
-                </div>
-                <div className="h-3 rounded-full bg-surface-800">
-                  <div
-                    className="h-full rounded-full bg-surface-400 transition-all"
-                    style={{ width: `${score.recency}%` }}
-                  />
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-            <h2 className="mb-6 text-lg font-semibold text-white">Vulnerability Profile</h2>
-            <p className="mb-6 text-sm text-surface-400">
-              How susceptible you are to each type of social engineering attack
-            </p>
+          {/* Vulnerabilities */}
+          <div className={`brutalist-card p-6 animate-fade-up stagger-2 opacity-0 ${mounted ? "" : ""}`}>
+            <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-2">VULNERABILITY PROFILE</div>
+            <p className="text-xs text-gray-400 font-mono mb-6">Your susceptibility to each attack type</p>
 
-            {vulnerabilities && (
+            {vulns && (
               <div className="space-y-4">
-                {Object.entries(vulnerabilities).map(([key, value]) => (
+                {Object.entries(vulns).map(([key, value]) => (
                   <div key={key}>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-surface-300">{getVulnerabilityLabel(key)}</span>
-                      <span className="text-white">{Math.round(value * 100)}%</span>
+                    <div className="flex justify-between text-xs font-bold mb-1">
+                      <span className="uppercase tracking-wider">{vulnLabels[key] || key}</span>
+                      <span>{Math.round(value * 100)}%</span>
                     </div>
-                    <div className="h-3 rounded-full bg-surface-800">
-                      <div
-                        className={`h-full rounded-full transition-all ${getVulnerabilityColor(value)}`}
-                        style={{ width: `${value * 100}%` }}
-                      />
+                    <div className="h-3 border-[2px] border-black bg-sand">
+                      <div className={`h-full transition-all duration-700 ${vulnColor(value)}`} style={{ width: `${value * 100}%` }} />
                     </div>
                   </div>
                 ))}
@@ -203,45 +133,22 @@ export default function AnalyticsPage() {
         </div>
       )}
 
-      <div className="rounded-xl border border-surface-800 bg-surface-900 p-6">
-        <h2 className="mb-4 text-lg font-semibold text-white">Recommendations</h2>
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="rounded-lg bg-surface-800 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <Activity className="h-5 w-5 text-primary-400" />
-              <h3 className="font-medium text-white">Keep Training</h3>
+      {/* RECOMMENDATIONS */}
+      <div className={`brutalist-card p-6 animate-fade-up stagger-3 opacity-0 ${mounted ? "" : ""}`}>
+        <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">RECOMMENDATIONS</div>
+        <div className="grid gap-3 sm:grid-cols-2">
+          {[
+            { title: "Keep Training", desc: "Run more simulations to build resilience.", color: "bg-[#3B82F6]" },
+            { title: "Analyze Real Messages", desc: "Check suspicious messages you receive.", color: "bg-[#22C55E]" },
+            { title: "Focus on Weaknesses", desc: "Pay attention to your highest vulnerability areas.", color: "bg-[#FBBF24]" },
+            { title: "Stay Informed", desc: "Follow cybersecurity news for new tactics.", color: "bg-[#A855F7]" },
+          ].map((rec) => (
+            <div key={rec.title} className="border-[2px] border-black p-4">
+              <div className={`inline-flex h-6 w-6 items-center justify-center border-[2px] border-black ${rec.color} text-[10px] font-black mb-2`}>→</div>
+              <h3 className="font-bold uppercase tracking-wider text-sm mb-1">{rec.title}</h3>
+              <p className="text-xs text-gray-500 font-mono">{rec.desc}</p>
             </div>
-            <p className="text-sm text-surface-400">
-              Run more simulations to improve your ability to identify social engineering tactics.
-            </p>
-          </div>
-          <div className="rounded-lg bg-surface-800 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-5 w-5 text-success-400" />
-              <h3 className="font-medium text-white">Analyze Real Messages</h3>
-            </div>
-            <p className="text-sm text-surface-400">
-              Use the threat detector to check suspicious messages you receive in real life.
-            </p>
-          </div>
-          <div className="rounded-lg bg-surface-800 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <AlertTriangle className="h-5 w-5 text-warning-400" />
-              <h3 className="font-medium text-white">Focus on Weaknesses</h3>
-            </div>
-            <p className="text-sm text-surface-400">
-              Pay special attention to your highest vulnerability categories shown above.
-            </p>
-          </div>
-          <div className="rounded-lg bg-surface-800 p-4">
-            <div className="flex items-center gap-2 mb-2">
-              <TrendingUp className="h-5 w-5 text-danger-400" />
-              <h3 className="font-medium text-white">Stay Informed</h3>
-            </div>
-            <p className="text-sm text-surface-400">
-              Follow cybersecurity news to learn about new social engineering tactics being used.
-            </p>
-          </div>
+          ))}
         </div>
       </div>
     </div>
