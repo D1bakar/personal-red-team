@@ -1,18 +1,35 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { Eye, Loader2, Plus, ShieldQuestion, Swords, X } from "lucide-react";
 import { api } from "@/lib/api";
+import { EmptyState, PageHeader, SegmentedControl, Skeleton } from "@/components/ui";
+import { cn } from "@/lib/utils";
+
+const filters = [
+  { value: "all", label: "All" },
+  { value: "phishing_email", label: "Email" },
+  { value: "sms_smishing", label: "SMS" },
+  { value: "authority_scam", label: "Authority" },
+  { value: "urgency_fear", label: "Urgency" },
+  { value: "curiosity_bait", label: "Curiosity" },
+] as const;
+
+type Filter = (typeof filters)[number]["value"];
+
+function prettyType(t: string) {
+  return (t || "simulation").replace(/_/g, " ");
+}
 
 export default function SimulationsPage() {
   const [simulations, setSimulations] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
   const [revealId, setRevealId] = useState<string | null>(null);
   const [revealData, setRevealData] = useState<any>(null);
-  const [filter, setFilter] = useState("all");
-  const [mounted, setMounted] = useState(false);
+  const [filter, setFilter] = useState<Filter>("all");
 
   useEffect(() => {
-    setMounted(true);
     loadSimulations();
   }, []);
 
@@ -20,8 +37,10 @@ export default function SimulationsPage() {
     try {
       const data = await api.listSimulations();
       setSimulations(Array.isArray(data) ? data : []);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      /* keep quiet, show empty state */
+    } finally {
+      setFetching(false);
     }
   };
 
@@ -30,8 +49,8 @@ export default function SimulationsPage() {
     try {
       const sim = await api.generateSimulation();
       setSimulations((prev) => [sim, ...prev]);
-    } catch (err) {
-      console.error(err);
+    } catch {
+      /* noop */
     } finally {
       setLoading(false);
     }
@@ -41,128 +60,158 @@ export default function SimulationsPage() {
     setRevealId(id);
     try {
       const data = await api.revealSimulation(id);
-      setRevealData(data);
+      setRevealData({ ...data, simulation_id: id });
       loadSimulations();
-    } catch (err) {
-      console.error(err);
+    } catch {
+      /* noop */
     } finally {
       setRevealId(null);
     }
   };
 
-  const filtered = simulations.filter((s) => filter === "all" || s.type === filter);
+  const showStoredReveal = (sim: any) => {
+    setRevealData({
+      simulation_id: sim.id,
+      psychological_triggers: sim.psychological_triggers,
+      explanation: sim.explanation,
+      defense_tips: sim.defense_tips,
+      threat_level: sim.threat_level,
+      difficulty_rating: sim.difficulty_level,
+    });
+    document.getElementById("reveal-panel")?.scrollIntoView({ behavior: "smooth" });
+  };
 
-  if (!mounted) return null;
+  const filtered = simulations.filter((s) => filter === "all" || s.type === filter);
+  const triggers: string[] = revealData?.triggers || revealData?.psychological_triggers || [];
+  const tips: string[] = revealData?.tips || revealData?.defense_tips || [];
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-black uppercase tracking-tight">SIMULATIONS</h1>
-          <p className="text-sm text-gray-500 mt-1">Train against social engineering attacks</p>
-        </div>
-        <button onClick={handleGenerate} className="brutalist-btn shrink-0" disabled={loading}>
-          {loading ? "GENERATING..." : "GENERATE ATTACK"}
-        </button>
-      </div>
-
-      {/* FILTERS */}
-      <div className="flex flex-wrap gap-2">
-        {[
-          { value: "all", label: "ALL" },
-          { value: "phishing_email", label: "EMAIL" },
-          { value: "sms_smishing", label: "SMS" },
-          { value: "authority_scam", label: "AUTHORITY" },
-          { value: "urgency_fear", label: "URGENCY" },
-          { value: "curiosity_bait", label: "CURIOSITY" },
-        ].map((f) => (
-          <button
-            key={f.value}
-            onClick={() => setFilter(f.value)}
-            className={`border-[2px] border-black px-3 py-1 text-[10px] font-bold uppercase tracking-wider transition-all ${
-              filter === f.value ? "bg-black text-[#FFFBF0]" : "bg-white hover:bg-gray-100"
-            }`}
-          >
-            {f.label}
+      <PageHeader
+        title="Simulations"
+        subtitle="Safe drills that teach you how attacks really feel."
+        action={
+          <button onClick={handleGenerate} className="btn-primary" disabled={loading}>
+            {loading ? <Loader2 size={15} className="animate-spin" /> : <Plus size={15} />}
+            {loading ? "Crafting attack…" : "New drill"}
           </button>
-        ))}
-      </div>
+        }
+      />
 
-      {/* LIST */}
-      {filtered.length === 0 ? (
-        <div className="brutalist-card p-12 text-center">
-          <div className="text-sm font-bold uppercase tracking-wider text-gray-400 mb-4">NO SIMULATIONS FOUND</div>
-          <button onClick={handleGenerate} className="brutalist-btn">GENERATE YOUR FIRST ATTACK</button>
+      {/* Reveal panel */}
+      {revealData && (
+        <div id="reveal-panel" className="card overflow-hidden animate-pop">
+          <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+            <h2 className="font-semibold tracking-tight">Attack anatomy</h2>
+            <button onClick={() => setRevealData(null)} className="btn-ghost !p-2" aria-label="Close">
+              <X size={16} />
+            </button>
+          </div>
+          <div className="grid gap-4 p-6 sm:grid-cols-2">
+            <div className="panel p-4">
+              <p className="label">Threat level</p>
+              <p className="text-sm font-semibold capitalize">
+                {revealData.level || revealData.threat_level || "Unknown"}
+              </p>
+            </div>
+            <div className="panel p-4">
+              <p className="label">Difficulty</p>
+              <p className="text-sm font-semibold">
+                {revealData.difficulty_rating ?? revealData.level ?? "—"}
+              </p>
+            </div>
+            <div className="panel p-4 sm:col-span-2">
+              <p className="label">What just happened</p>
+              <p className="text-sm leading-relaxed text-ink-700">{revealData.explanation}</p>
+            </div>
+            <div className="panel p-4">
+              <p className="label">Psychological triggers</p>
+              <div className="flex flex-wrap gap-1.5">
+                {triggers.length === 0 && <span className="text-sm text-ink-400">None listed</span>}
+                {triggers.map((t: string) => (
+                  <span key={t} className="badge-rose">{t}</span>
+                ))}
+              </div>
+            </div>
+            <div className="panel p-4">
+              <p className="label">How to defend</p>
+              <ul className="space-y-1.5">
+                {tips.map((tip: string) => (
+                  <li key={tip} className="flex gap-2 text-sm leading-relaxed text-ink-700">
+                    <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-teal-500" />
+                    {tip}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          </div>
         </div>
+      )}
+
+      <SegmentedControl options={[...filters]} value={filter} onChange={setFilter} />
+
+      {fetching ? (
+        <div className="space-y-3">
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-24" />
+          ))}
+        </div>
+      ) : filtered.length === 0 ? (
+        <EmptyState
+          icon={ShieldQuestion}
+          title="No drills here yet"
+          hint="Generate your first attack simulation and learn to spot it before it spots you."
+          action={
+            <button onClick={handleGenerate} className="btn-primary" disabled={loading}>
+              {loading ? "Crafting attack…" : "Generate your first drill"}
+            </button>
+          }
+        />
       ) : (
         <div className="space-y-3">
-          {filtered.map((sim) => (
-            <div key={sim.id} className="brutalist-card p-4">
-              <div className="flex items-start justify-between gap-4">
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="border-[2px] border-black px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider bg-[#3B82F6] text-white shrink-0">
-                      {sim.type.replace(/_/g, " ")}
-                    </span>
-                    <span className="text-[10px] font-bold uppercase text-gray-500 shrink-0">LVL {sim.difficulty_level}</span>
+          {filtered.map((sim, i) => {
+            const revealed = sim.is_revealed ?? sim.status === "revealed";
+            return (
+              <div
+                key={sim.id}
+                className={cn("card card-hover p-5 animate-fade-up", `stagger-${Math.min(i + 1, 6)}`)}
+              >
+                <div className="flex items-start justify-between gap-4">
+                  <div className="min-w-0">
+                    <div className="mb-2 flex flex-wrap items-center gap-2">
+                      <span className="badge-blue capitalize">{prettyType(sim.type)}</span>
+                      {sim.difficulty_level != null && (
+                        <span className="badge-slate">Level {sim.difficulty_level}</span>
+                      )}
+                      <span className={cn(revealed ? "badge-emerald" : "badge-amber")}>
+                        {revealed ? "Reviewed" : "Active"}
+                      </span>
+                    </div>
+                    <h3 className="font-semibold tracking-tight">{sim.scenario_name}</h3>
+                    {sim.scenario_text && (
+                      <p className="subtle mt-1 line-clamp-2 !text-[13px]">{sim.scenario_text}</p>
+                    )}
                   </div>
-                  <h3 className="font-bold text-sm mt-2">{sim.scenario_name}</h3>
-                  <p className="text-xs text-gray-500 mt-1 leading-relaxed line-clamp-2">{sim.scenario_text}</p>
-                </div>
-                <div className="shrink-0">
-                  {sim.is_revealed ? (
-                    <button
-                      onClick={() => setRevealData({ triggers: sim.psychological_triggers, tips: sim.defense_tips, level: sim.threat_level, explanation: sim.explanation })}
-                      className="brutalist-btn-outline !text-[10px] !py-1 !px-2"
-                    >
-                      VIEW
-                    </button>
-                  ) : (
-                    <button
-                      onClick={() => handleReveal(sim.id)}
-                      disabled={revealId === sim.id}
-                      className="brutalist-btn !text-[10px] !py-1 !px-2"
-                    >
-                      {revealId === sim.id ? "..." : "REVEAL"}
-                    </button>
-                  )}
+                  <div className="shrink-0">
+                    {revealed ? (
+                      <button onClick={() => showStoredReveal(sim)} className="btn-secondary !px-3.5 !py-1.5 !text-xs">
+                        <Eye size={13} /> Review
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleReveal(sim.id)}
+                        disabled={revealId === sim.id}
+                        className="btn-primary !px-3.5 !py-1.5 !text-xs"
+                      >
+                        {revealId === sim.id ? <Loader2 size={13} className="animate-spin" /> : <Swords size={13} />}
+                        {revealId === sim.id ? "Revealing" : "Reveal"}
+                      </button>
+                    )}
+                  </div>
                 </div>
               </div>
-
-              {/* REVEAL PANEL */}
-              {revealData && (
-                <div className="mt-4 border-t-[3px] border-black pt-4 space-y-3">
-                  <div className="border-[2px] border-black p-3 bg-[#FFFBF0]">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">THREAT LEVEL</div>
-                    <div className="font-bold text-sm uppercase">{revealData.level}</div>
-                  </div>
-                  <div className="border-[2px] border-black p-3 bg-[#FFFBF0]">
-                    <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">EXPLANATION</div>
-                    <div className="text-xs leading-relaxed">{revealData.explanation}</div>
-                  </div>
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="border-[2px] border-black p-3 bg-[#FFFBF0]">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">PSYCHOLOGICAL TRIGGERS</div>
-                      <div className="flex flex-wrap gap-1">
-                        {(revealData.triggers || revealData.psychological_triggers || []).map((t: string) => (
-                          <span key={t} className="border-[2px] border-black px-2 py-0.5 text-[10px] font-bold bg-[#FF3B3B] text-white">{t}</span>
-                        ))}
-                      </div>
-                    </div>
-                    <div className="border-[2px] border-black p-3 bg-[#FFFBF0]">
-                      <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">DEFENSE TIPS</div>
-                      <ul className="space-y-1">
-                        {(revealData.tips || revealData.defense_tips || []).map((tip: string) => (
-                          <li key={tip} className="text-xs flex gap-2"><span className="shrink-0">-</span><span>{tip}</span></li>
-                        ))}
-                      </ul>
-                    </div>
-                  </div>
-                  <button onClick={() => setRevealData(null)} className="text-xs font-bold uppercase tracking-wider hover:underline">CLOSE</button>
-                </div>
-              )}
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </div>

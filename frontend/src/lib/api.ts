@@ -130,8 +130,67 @@ class ApiClient {
       headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: formData,
     });
+    if (!data.refresh_token) {
+      // Account has 2FA enabled: backend issued an mfa_pending token.
+      // Do NOT store it as a session — park it for the challenge page.
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("mfa_pending_token", data.access_token);
+      }
+      return { mfaRequired: true as const, user: data.user };
+    }
     this.setTokens(data.access_token, data.refresh_token);
+    return { mfaRequired: false as const, ...data };
+  }
+
+  async verify2faLogin(token: string, code: string) {
+    const data = await this.request("/auth/verify-2fa", {
+      method: "POST",
+      body: JSON.stringify({ token, code }),
+    });
+    this.setTokens(data.access_token, data.refresh_token);
+    if (typeof window !== "undefined") {
+      sessionStorage.removeItem("mfa_pending_token");
+    }
     return data;
+  }
+
+  async forgotPassword(email: string) {
+    return this.request("/auth/forgot-password", {
+      method: "POST",
+      body: JSON.stringify({ email }),
+    });
+  }
+
+  async resetPassword(token: string, password: string) {
+    return this.request("/auth/reset-password", {
+      method: "POST",
+      body: JSON.stringify({ token, password }),
+    });
+  }
+
+  async verifyEmail(token: string) {
+    return this.request("/auth/verify-email", {
+      method: "POST",
+      body: JSON.stringify({ token }),
+    });
+  }
+
+  async setup2fa() {
+    return this.request("/auth/2fa/setup", { method: "POST" });
+  }
+
+  async enable2fa(code: string) {
+    return this.request("/auth/2fa/enable", {
+      method: "POST",
+      body: JSON.stringify({ token: "", code }),
+    });
+  }
+
+  async disable2fa(code: string) {
+    return this.request("/auth/2fa/disable", {
+      method: "POST",
+      body: JSON.stringify({ token: "", code }),
+    });
   }
 
   async getMe() {

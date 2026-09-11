@@ -71,6 +71,9 @@ async def register(request: Request, user_data: UserCreate, db: AsyncSession = D
 
     await send_verification_email(email, verification_token)
 
+    if not settings.RESEND_API_KEY:
+        user.is_verified = True
+
     access_token = create_access_token(data={"sub": str(user.id)})
     refresh_token = create_refresh_token(data={"sub": str(user.id)})
 

@@ -5,108 +5,160 @@
 @layer base {
   html {
     scroll-behavior: smooth;
-    overflow-x: hidden;
   }
 
   body {
-    @apply bg-[#FFFBF0] text-black font-mono antialiased overflow-x-hidden;
+    @apply bg-mist text-ink-900 font-sans antialiased;
     min-height: 100vh;
+    text-rendering: optimizeLegibility;
   }
 
   ::selection {
-    @apply bg-black text-[#FFFBF0];
+    @apply bg-teal-600/90 text-white;
   }
 
-  input, textarea, select, button {
-    @apply font-mono;
+  input,
+  textarea,
+  select,
+  button {
+    @apply font-sans;
+  }
+
+  :focus-visible {
+    outline: 2px solid theme("colors.teal.500");
+    outline-offset: 2px;
   }
 }
 
 @layer components {
-  .brutalist-card {
-    @apply bg-white border-[3px] border-black shadow-[4px_4px_0px_0px_#000] transition-all duration-200 overflow-hidden;
+  /* ---------- Surfaces ---------- */
+  .card {
+    @apply rounded-card border border-white/60 bg-white/85 shadow-soft backdrop-blur-xl;
   }
 
-  .brutalist-card:hover {
-    @apply shadow-[6px_6px_0px_0px_#000] -translate-x-0.5 -translate-y-0.5;
+  .card-hover {
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-soft-lg;
   }
 
-  .brutalist-btn {
-    @apply bg-black text-[#FFFBF0] border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#FFFBF0] hover:shadow-[1px_1px_0px_0px_#FFFBF0] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer whitespace-nowrap inline-flex items-center justify-center;
+  .panel {
+    @apply rounded-2xl border border-slate-200/70 bg-slate-50/70;
   }
 
-  .brutalist-btn-outline {
-    @apply bg-transparent text-black border-[3px] border-black px-5 py-2.5 font-bold uppercase tracking-wider text-sm shadow-[3px_3px_0px_0px_#000] hover:bg-black hover:text-[#FFFBF0] hover:shadow-[1px_1px_0px_0px_#000] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all duration-150 cursor-pointer whitespace-nowrap inline-flex items-center justify-center;
+  /* ---------- Buttons ---------- */
+  .btn {
+    @apply inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 py-2.5 text-sm font-semibold transition-all duration-200 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60;
   }
 
-  .brutalist-input {
-    @apply w-full bg-white border-[3px] border-black px-4 py-2.5 font-mono text-sm placeholder:text-gray-400 focus:outline-none focus:shadow-[3px_3px_0px_0px_#000] focus:translate-x-[-1px] focus:translate-y-[-1px] transition-all duration-150 box-border;
+  .btn-primary {
+    @apply btn bg-gradient-to-r from-teal-700 to-teal-600 text-white shadow-glow hover:shadow-soft-lg hover:brightness-110;
   }
 
-  .brutalist-badge {
-    @apply inline-flex items-center border-[2px] border-black px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider shrink-0;
+  .btn-secondary {
+    @apply btn border border-slate-200 bg-white text-ink-900 shadow-sm hover:border-slate-300 hover:bg-slate-50;
   }
 
-  .brutalist-tag {
-    @apply inline-flex items-center border-[2px] border-black bg-[#E8E4DA] px-2 py-0.5 text-xs font-bold uppercase shrink-0;
+  .btn-danger {
+    @apply btn bg-gradient-to-r from-rose-600 to-rose-500 text-white shadow-sm hover:brightness-110;
+  }
+
+  .btn-ghost {
+    @apply btn text-ink-500 hover:bg-slate-100 hover:text-ink-900;
+  }
+
+  /* ---------- Inputs ---------- */
+  .label {
+    @apply mb-1.5 block text-[11px] font-semibold uppercase tracking-[0.08em] text-ink-400;
+  }
+
+  .input {
+    @apply w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm text-ink-900 shadow-sm transition-all duration-200 placeholder:text-slate-400 hover:border-slate-300 focus:border-teal-500 focus:outline-none focus:ring-4 focus:ring-teal-500/15;
+  }
+
+  /* ---------- Badges / pills ---------- */
+  .badge {
+    @apply inline-flex shrink-0 items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold;
+  }
+
+  .badge-teal {
+    @apply badge bg-teal-100 text-teal-900;
+  }
+
+  .badge-emerald {
+    @apply badge bg-emerald-100 text-emerald-800;
+  }
+
+  .badge-amber {
+    @apply badge bg-amber-100 text-amber-800;
+  }
+
+  .badge-rose {
+    @apply badge bg-rose-100 text-rose-700;
+  }
+
+  .badge-slate {
+    @apply badge bg-slate-100 text-slate-600;
+  }
+
+  .badge-blue {
+    @apply badge bg-sky-100 text-sky-800;
+  }
+
+  /* ---------- Typography helpers ---------- */
+  .eyebrow {
+    @apply text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-700;
+  }
+
+  .h-display {
+    @apply font-semibold tracking-tight text-ink-900;
+  }
+
+  .subtle {
+    @apply text-sm leading-relaxed text-ink-500;
+  }
+
+  /* ---------- Alerts ---------- */
+  .alert {
+    @apply rounded-xl border p-3 text-sm font-medium;
+  }
+
+  .alert-error {
+    @apply alert border-rose-200 bg-rose-50 text-rose-700;
+  }
+
+  .alert-success {
+    @apply alert border-emerald-200 bg-emerald-50 text-emerald-700;
+  }
+
+  /* ---------- Ambient background ---------- */
+  .ambient {
+    @apply pointer-events-none absolute inset-0 overflow-hidden;
+  }
+
+  .orb {
+    @apply absolute rounded-full blur-3xl;
   }
 }
 
 @layer utilities {
-  .animate-brutalist-in {
-    animation: brutalistIn 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  .stagger-1 { animation-delay: 60ms; }
+  .stagger-2 { animation-delay: 120ms; }
+  .stagger-3 { animation-delay: 180ms; }
+  .stagger-4 { animation-delay: 240ms; }
+  .stagger-5 { animation-delay: 300ms; }
+  .stagger-6 { animation-delay: 360ms; }
+
+  .text-gradient {
+    @apply bg-gradient-to-r from-teal-700 via-teal-600 to-cyan-600 bg-clip-text text-transparent;
   }
-
-  .animate-fade-up {
-    animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease both;
-  }
-
-  .animate-slide-in-left {
-    animation: slideInLeft 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .animate-pop {
-    animation: pop 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
-  }
-
-  .stagger-1 { animation-delay: 50ms; }
-  .stagger-2 { animation-delay: 100ms; }
-  .stagger-3 { animation-delay: 150ms; }
-  .stagger-4 { animation-delay: 200ms; }
-  .stagger-5 { animation-delay: 250ms; }
-  .stagger-6 { animation-delay: 300ms; }
 }
 
-@keyframes brutalistIn {
-  from { opacity: 0; transform: translateY(8px) scale(0.98); }
-  to { opacity: 1; transform: translateY(0) scale(1); }
-}
+/* Slim, quiet scrollbars */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 8px; }
+::-webkit-scrollbar-thumb:hover { background: #94A3B8; }
 
-@keyframes fadeUp {
-  from { opacity: 0; transform: translateY(12px); }
-  to { opacity: 1; transform: translateY(0); }
+/* Range inputs */
+input[type="range"] {
+  @apply h-1.5 cursor-pointer appearance-none rounded-full bg-slate-200 accent-teal-600;
 }
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
-}
-
-@keyframes slideInLeft {
-  from { opacity: 0; transform: translateX(-12px); }
-  to { opacity: 1; transform: translateX(0); }
-}
-
-@keyframes pop {
-  0% { opacity: 0; transform: scale(0.9); }
-  70% { transform: scale(1.02); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-::-webkit-scrollbar { width: 8px; }
-::-webkit-scrollbar-track { background: #E8E4DA; }
-::-webkit-scrollbar-thumb { background: #000; border: 1px solid #000; }

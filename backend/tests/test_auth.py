@@ -21,7 +21,8 @@ async def test_register_success(client: AsyncClient):
     assert "access_token" in data
     assert "refresh_token" in data
     assert data["user"]["email"] == "new@example.com"
-    assert data["user"]["is_verified"] is False
+    # Dev mode (no RESEND_API_KEY) auto-verifies new users.
+    assert data["user"]["is_verified"] is True
 
 
 @pytest.mark.asyncio

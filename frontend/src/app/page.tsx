@@ -2,109 +2,184 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import {
+  ArrowRight,
+  BarChart3,
+  Radar,
+  ScanSearch,
+  ShieldCheck,
+  Sparkles,
+  Swords,
+} from "lucide-react";
+
+const stats = [
+  { value: "9", label: "Attack types simulated" },
+  { value: "10k+", label: "Simulations run" },
+  { value: "50k+", label: "Threats analyzed" },
+  { value: "1k+", label: "People training" },
+];
+
+const pillars = [
+  {
+    icon: Swords,
+    title: "Simulate",
+    desc: "Safe, controlled phishing drills across email, SMS, and chat. Exposure in a safe space builds real immunity.",
+    tint: "bg-teal-50 text-teal-700",
+  },
+  {
+    icon: ScanSearch,
+    title: "Detect",
+    desc: "Paste any suspicious message and get an instant read — urgency cues, authority plays, manipulation patterns.",
+    tint: "bg-sky-50 text-sky-700",
+  },
+  {
+    icon: BarChart3,
+    title: "Improve",
+    desc: "Your security posture score tracks progress over time and shows exactly where you're still vulnerable.",
+    tint: "bg-violet-50 text-violet-700",
+  },
+];
+
+const attacks = [
+  "Phishing emails",
+  "SMS smishing",
+  "Authority scams",
+  "Urgency & fear",
+  "Curiosity bait",
+  "Prize & greed",
+  "Secrecy requests",
+  "Tech support",
+  "Social & romance",
+];
 
 export default function Home() {
   const [mounted, setMounted] = useState(false);
-  useEffect(() => { setMounted(true); }, []);
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
-    <div className="min-h-screen bg-[#FFFBF0]">
-      {/* NAV */}
-      <nav className="fixed top-0 left-0 right-0 z-50 border-b-[3px] border-black bg-[#FFFBF0]">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
-          <Link href="/" className="flex items-center gap-2">
-            <div className="flex h-8 w-8 items-center justify-center border-[3px] border-black bg-black text-[#FFFBF0] text-[10px] font-black">PRT</div>
-            <span className="font-bold text-xs uppercase tracking-wider hidden sm:block">Personal Red Team</span>
+    <div className="min-h-screen bg-mist text-ink-900">
+      {/* Nav */}
+      <header className="fixed inset-x-0 top-0 z-50 border-b border-white/60 bg-white/70 backdrop-blur-xl">
+        <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6">
+          <Link href="/" className="flex items-center gap-2.5">
+            <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-teal-700 to-cyan-600 text-white shadow-glow">
+              <ShieldCheck size={19} strokeWidth={2.2} />
+            </span>
+            <span className="font-semibold tracking-tight">Personal Red Team</span>
           </Link>
           <div className="flex items-center gap-2">
-            <Link href="/login" className="brutalist-btn-outline !py-1.5 !px-3 !text-xs">Sign In</Link>
-            <Link href="/register" className="brutalist-btn !py-1.5 !px-3 !text-xs">Get Started</Link>
+            <Link href="/login" className="btn-ghost !px-4">
+              Sign in
+            </Link>
+            <Link href="/register" className="btn-primary !py-2">
+              Get started
+              <ArrowRight size={15} />
+            </Link>
           </div>
         </div>
-      </nav>
+      </header>
 
-      {/* HERO */}
-      <section className="pt-20 pb-12 px-4 sm:px-6">
-        <div className="mx-auto max-w-6xl">
-          <div className={`transition-all duration-700 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-            <div className="brutalist-tag mb-6">AI-POWERED DEFENSE</div>
+      {/* Hero */}
+      <section className="relative overflow-hidden pb-16 pt-32 sm:pt-36">
+        <div className="ambient" aria-hidden>
+          <div className="orb left-[-140px] top-[-140px] h-[480px] w-[480px] bg-teal-200/50 animate-float-slow" />
+          <div className="orb right-[-160px] top-[10%] h-[520px] w-[520px] bg-cyan-200/40 animate-float-slower" />
+          <div className="orb bottom-[-200px] left-1/3 h-[380px] w-[380px] bg-sky-100/70" />
+        </div>
 
-            <h1 className="text-4xl sm:text-6xl lg:text-7xl font-black uppercase leading-[0.95] tracking-tighter mb-6 break-words">
-              YOUR<br />
-              <span className="inline-block border-[3px] border-black bg-[#FF3B3B] px-3 py-1 mt-1">HUMAN</span><br />
-              FIREWALL
+        <div className="relative mx-auto max-w-6xl px-4 sm:px-6">
+          <div
+            className={`max-w-2xl transition-all duration-700 ${mounted ? "animate-fade-up" : "opacity-0"}`}
+          >
+            <span className="badge-teal mb-5">
+              <Sparkles size={12} />
+              AI-powered defense training
+            </span>
+            <h1 className="text-4xl font-semibold leading-[1.05] tracking-tight sm:text-6xl">
+              Train your <span className="text-gradient">human firewall</span>
             </h1>
-
-            <p className="max-w-lg text-base sm:text-lg text-gray-600 mb-8 leading-relaxed">
-              The human psyche is the most critical vulnerability in cybersecurity. We build your psychological resilience through AI-driven simulations.
+            <p className="subtle mt-5 max-w-xl text-base sm:text-lg">
+              Most breaches start with a message, not malware. Personal Red Team builds your
+              psychological resilience with realistic simulations and instant threat analysis.
             </p>
-
-            <div className="flex flex-wrap gap-3">
-              <Link href="/register" className="brutalist-btn">Start Training</Link>
-              <a href="#features" className="brutalist-btn-outline">How It Works</a>
+            <div className="mt-8 flex flex-wrap gap-3">
+              <Link href="/register" className="btn-primary !px-7 !py-3 !text-[15px]">
+                Start training free
+                <ArrowRight size={16} />
+              </Link>
+              <a href="#how" className="btn-secondary !px-7 !py-3 !text-[15px]">
+                How it works
+              </a>
             </div>
           </div>
 
-          {/* STATS */}
-          <div className={`mt-12 border-[3px] border-black bg-white p-4 transition-all duration-700 delay-300 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {[
-                { label: "Attack Types", value: "9" },
-                { label: "Simulations Run", value: "10K+" },
-                { label: "Threats Caught", value: "50K+" },
-                { label: "Users Protected", value: "1K+" },
-              ].map((stat) => (
-                <div key={stat.label} className="text-center py-2">
-                  <div className="text-2xl font-black">{stat.value}</div>
-                  <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mt-1">{stat.label}</div>
+          {/* Stats */}
+          <div
+            className={`card mt-12 grid grid-cols-2 gap-2 p-3 transition-all sm:grid-cols-4 ${mounted ? "animate-fade-up stagger-2" : "opacity-0"}`}
+          >
+            {stats.map((s) => (
+              <div key={s.label} className="rounded-2xl px-4 py-5 text-center transition-colors hover:bg-slate-50">
+                <div className="font-mono text-2xl font-semibold tracking-tight sm:text-3xl">
+                  {s.value}
                 </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURES */}
-      <section id="features" className="py-12 px-4 sm:px-6 border-t-[3px] border-black">
-        <div className="mx-auto max-w-6xl">
-          <div className={`mb-10 transition-all duration-500 delay-100 ${mounted ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"}`}>
-            <div className="brutalist-tag mb-4">METHODOLOGY</div>
-            <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">THREE PILLARS</h2>
-          </div>
-
-          <div className="grid gap-6 md:grid-cols-3">
-            {[
-              { num: "01", title: "SIMULATION", desc: "Safe, controlled phishing attacks via email, SMS, and notifications. Inoculate yourself against real threats.", color: "bg-[#FF3B3B]" },
-              { num: "02", title: "DETECTION", desc: "Real-time AI analysis of incoming messages. Detects urgency, authority impersonation, and manipulation.", color: "bg-[#FBBF24]" },
-              { num: "03", title: "ANALYTICS", desc: "Track your Security Posture Score. Visualize vulnerability patterns and learn from each encounter.", color: "bg-[#22C55E]" },
-            ].map((f, i) => (
-              <div key={f.num} className={`brutalist-card p-6 animate-fade-up stagger-${i + 1} opacity-0`}>
-                <div className={`mb-4 inline-flex h-10 w-10 items-center justify-center border-[3px] border-black ${f.color} text-sm font-black`}>{f.num}</div>
-                <h3 className="text-lg font-black uppercase tracking-wider mb-2">{f.title}</h3>
-                <p className="text-sm text-gray-600 leading-relaxed">{f.desc}</p>
+                <div className="label !mb-0 mt-1">{s.label}</div>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* ATTACK TYPES */}
-      <section className="py-12 px-4 sm:px-6 bg-black text-[#FFFBF0] border-t-[3px] border-black">
+      {/* Pillars */}
+      <section id="how" className="px-4 py-16 sm:px-6">
         <div className="mx-auto max-w-6xl">
-          <div className="mb-10">
-            <div className="inline-flex items-center border-[2px] border-[#FFFBF0] px-2.5 py-0.5 text-xs font-bold uppercase tracking-wider mb-4">ARSENAL</div>
-            <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight">WE SIMULATE</h2>
+          <div className="mb-10 max-w-xl">
+            <p className="eyebrow mb-3">Methodology</p>
+            <h2 className="h-display text-3xl sm:text-4xl">Three steps to resilience</h2>
+            <p className="subtle mt-3">
+              A calm, repeatable loop: face a safe attack, learn its anatomy, watch your score rise.
+            </p>
           </div>
+          <div className="grid gap-5 md:grid-cols-3">
+            {pillars.map((p, i) => (
+              <div key={p.title} className={`card card-hover p-7 animate-fade-up stagger-${i + 1}`}>
+                <span className={`mb-5 flex h-12 w-12 items-center justify-center rounded-2xl ${p.tint}`}>
+                  <p.icon size={22} strokeWidth={2} />
+                </span>
+                <div className="mb-1 font-mono text-xs text-ink-400">0{i + 1}</div>
+                <h3 className="text-lg font-semibold tracking-tight">{p.title}</h3>
+                <p className="subtle mt-2">{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-            {[
-              "Phishing Emails", "SMS Smishing", "Authority Scams",
-              "Urgency & Fear", "Curiosity Bait", "Greed & Prizes",
-              "Secrecy Requests", "Tech Support", "Romance & Social",
-            ].map((name) => (
-              <div key={name} className="flex items-center gap-3 border-[3px] border-white/20 p-4 hover:border-white transition-colors duration-200">
-                <div className="h-2 w-2 bg-[#FF3B3B] shrink-0" />
-                <span className="font-bold uppercase tracking-wider text-sm">{name}</span>
+      {/* Attack coverage */}
+      <section className="px-4 py-8 sm:px-6">
+        <div className="mx-auto max-w-6xl overflow-hidden rounded-card bg-ink-900 p-8 text-white shadow-soft-lg sm:p-12">
+          <div className="mb-8 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="mb-3 text-[11px] font-semibold uppercase tracking-[0.14em] text-teal-300">
+                Coverage
+              </p>
+              <h2 className="text-3xl font-semibold tracking-tight sm:text-4xl">
+                Attacks we simulate
+              </h2>
+            </div>
+            <p className="max-w-sm text-sm leading-relaxed text-slate-400">
+              Nine families of social-engineering tactics, tuned to your level as you improve.
+            </p>
+          </div>
+          <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-3">
+            {attacks.map((a) => (
+              <div
+                key={a}
+                className="flex items-center gap-3 rounded-xl border border-white/10 bg-white/5 px-4 py-3.5 text-sm font-medium transition-colors duration-200 hover:border-teal-400/40 hover:bg-white/10"
+              >
+                <Radar size={15} className="shrink-0 text-teal-300" />
+                {a}
               </div>
             ))}
           </div>
@@ -112,19 +187,29 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-16 px-4 sm:px-6 border-t-[3px] border-black">
-        <div className="mx-auto max-w-2xl text-center">
-          <h2 className="text-3xl sm:text-4xl font-black uppercase tracking-tight mb-4">READY TO DEFEND?</h2>
-          <p className="text-gray-600 mb-8">Start training your defenses against social engineering today.</p>
-          <Link href="/register" className="brutalist-btn text-base !px-8 !py-3">CREATE ACCOUNT</Link>
+      <section className="px-4 py-20 text-center sm:px-6">
+        <div className="mx-auto max-w-2xl animate-fade-up">
+          <span className="badge-teal mb-5">Free to start</span>
+          <h2 className="h-display text-3xl sm:text-4xl">Ready when the next scam arrives?</h2>
+          <p className="subtle mx-auto mt-3 max-w-md">
+            Two minutes to set up. A lifetime of sharper instincts.
+          </p>
+          <Link href="/register" className="btn-primary mx-auto mt-8 !px-8 !py-3 !text-[15px]">
+            Create your account
+            <ArrowRight size={16} />
+          </Link>
         </div>
       </section>
 
-      {/* FOOTER */}
-      <footer className="border-t-[3px] border-black py-6 px-4 sm:px-6">
-        <div className="mx-auto max-w-6xl flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div className="font-bold text-sm uppercase tracking-wider">PRT - Personal Red Team</div>
-          <div className="text-xs text-gray-500">AI-Powered Social Engineering Defense</div>
+      <footer className="border-t border-slate-200/70 px-4 py-8 sm:px-6">
+        <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-3 sm:flex-row">
+          <div className="flex items-center gap-2 text-sm font-semibold">
+            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-teal-700 to-cyan-600 text-white">
+              <ShieldCheck size={15} />
+            </span>
+            Personal Red Team
+          </div>
+          <p className="text-xs text-ink-400">Train calmly. Stay sharp.</p>
         </div>
       </footer>
     </div>

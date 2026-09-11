@@ -53,11 +53,12 @@ def create_access_token(data: dict, expires_delta: timedelta | None = None) -> s
     expire = datetime.now(timezone.utc) + (expires_delta or timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES))
     to_encode.update({
         "exp": expire,
-        "type": "access",
         "jti": secrets.token_hex(16),
         "iss": "personal-red-team",
         "aud": "personal-red-team-api",
     })
+    # Preserve caller-specified token type (e.g. "mfa_pending"); default to "access".
+    to_encode.setdefault("type", "access")
     return jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
 
 
