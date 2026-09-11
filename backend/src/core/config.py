@@ -11,9 +11,29 @@ class Settings(BaseSettings):
 
     SECRET_KEY: str = "your-secret-key-change-in-production"
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 60 * 24 * 7
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:3001"]
+    CORS_ORIGINS: list[str] = ["http://localhost:3000"]
+
+    DEBUG: bool = True
+
+    RATE_LIMIT_AUTH: str = "5/minute"
+    RATE_LIMIT_API: str = "60/minute"
+
+    MAX_PASSWORD_LENGTH: int = 128
+    MIN_PASSWORD_LENGTH: int = 8
+
+    # Email (Resend)
+    RESEND_API_KEY: str = ""
+    EMAIL_FROM: str = "noreply@personalredteam.com"
+    FRONTEND_URL: str = "http://localhost:3000"
+
+    # Password Reset
+    PASSWORD_RESET_EXPIRE_MINUTES: int = 30
+
+    # 2FA (TOTP)
+    TOTP_ISSUER: str = "Personal Red Team"
 
     class Config:
         env_file = ".env"

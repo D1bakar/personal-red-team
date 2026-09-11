@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 const nav = [
   { name: "Dashboard", href: "/", icon: "/" },
@@ -18,12 +19,12 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("access_token");
     if (!token) router.push("/login");
   }, [router]);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    api.clearTokens();
     localStorage.removeItem("user");
     router.push("/login");
   };

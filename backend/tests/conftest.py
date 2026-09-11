@@ -53,6 +53,7 @@ async def test_user(db_session: AsyncSession):
         name="Test User",
         hashed_password=get_password_hash("TestPass123!"),
         security_score=0.0,
+        is_verified=True,
     )
     db_session.add(user)
     await db_session.commit()
@@ -73,6 +74,7 @@ async def second_user(db_session: AsyncSession):
         name="Second User",
         hashed_password=get_password_hash("SecondPass123!"),
         security_score=0.0,
+        is_verified=True,
     )
     db_session.add(user)
     await db_session.commit()

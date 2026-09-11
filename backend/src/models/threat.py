@@ -20,6 +20,8 @@ class ThreatAnalysis(Base):
     threat_level = Column(String, nullable=False)
     threat_score = Column(Float, nullable=False)
     triggers = Column(JSON, default=[])
+    flagged_phrases = Column(JSON, default=[])
+    recommendations = Column(JSON, default=[])
     explanation = Column(Text, nullable=False)
     analyzed_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 

@@ -12,6 +12,8 @@ class ThreatAnalysisResponse(BaseModel):
     threat_level: str
     threat_score: float
     triggers: list[str]
+    flagged_phrases: list[str]
+    recommendations: list[str]
     explanation: str
     analyzed_at: datetime
 

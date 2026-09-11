@@ -1,144 +1,133 @@
 "use client";
 
-import { useState } from "react";
-import { useAIThreatDetection } from "@/hooks/useAIThreatDetection";
+import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 export default function ThreatsPage() {
   const [input, setInput] = useState("");
-  const [serverResult, setServerResult] = useState<any>(null);
-  const [serverLoading, setServerLoading] = useState(false);
-  const { analyze, isAnalyzing, result: clientResult, error: clientError } = useAIThreatDetection();
+  const [analysis, setAnalysis] = useState<any>(null);
+  const [history, setHistory] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
-  const handleAnalyze = async () => {
+  useEffect(() => {
+    setMounted(true);
+    api.getThreatHistory().then((data) => setHistory(Array.isArray(data) ? data : [])).catch(() => {});
+  }, []);
+
+  const handleAnalyze = async (e: React.FormEvent) => {
+    e.preventDefault();
     if (!input.trim()) return;
-    analyze(input);
-    const token = localStorage.getItem("token");
-    if (token) {
-      setServerLoading(true);
-      try {
-        const res = await fetch("http://localhost:8000/api/v1/threats/analyze", {
-          method: "POST",
-          headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-          body: JSON.stringify({ input_text: input }),
-        });
-        if (res.ok) setServerResult(await res.json());
-      } catch (err) { console.error(err); } finally { setServerLoading(false); }
+    setLoading(true);
+    try {
+      const data = await api.analyzeThreat(input.trim());
+      setAnalysis(data);
+      setInput("");
+      setHistory((prev) => [data, ...prev]);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const borderLeft = (level: string) => {
-    if (level === "danger") return "border-l-[#FF3B3B]";
-    if (level === "caution") return "border-l-[#FBBF24]";
-    return "border-l-[#22C55E]";
-  };
-
-  const badge = (level: string) => {
-    if (level === "danger") return "bg-[#FF3B3B] text-white border-[#FF3B3B]";
-    if (level === "caution") return "bg-[#FBBF24] border-[#FBBF24]";
-    return "bg-[#22C55E] border-[#22C55E]";
-  };
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-black uppercase tracking-tight">THREAT DETECTION</h1>
-        <p className="text-sm text-gray-500 mt-1">Analyze messages for social engineering</p>
+        <h1 className="text-3xl font-black uppercase tracking-tight">THREAT ANALYZER</h1>
+        <p className="text-sm text-gray-500 mt-1">Paste suspicious messages for instant AI analysis</p>
       </div>
 
       {/* INPUT */}
-      <div className="brutalist-card p-6">
-        <label className="block text-xs font-bold uppercase tracking-wider mb-2">SUSPICIOUS MESSAGE</label>
-        <textarea value={input} onChange={(e) => setInput(e.target.value)} rows={4} className="brutalist-input resize-none mb-3" placeholder="Paste a suspicious message here..." />
-        <button onClick={handleAnalyze} disabled={isAnalyzing || serverLoading || !input.trim()} className="brutalist-btn !text-xs">
-          {isAnalyzing || serverLoading ? "ANALYZING..." : "ANALYZE MESSAGE"}
-        </button>
+      <div className="brutalist-card p-5">
+        <form onSubmit={handleAnalyze} className="space-y-4">
+          <div>
+            <label className="block text-xs font-bold uppercase tracking-wider mb-1">SUSPICIOUS MESSAGE</label>
+            <textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              className="brutalist-input w-full min-h-[120px] resize-y"
+              placeholder="Paste email, SMS, or message content..."
+              required
+              maxLength={5000}
+            />
+            <div className="text-[10px] font-bold text-gray-400 mt-1 text-right">{input.length}/5000</div>
+          </div>
+          <button type="submit" className="brutalist-btn" disabled={loading || !input.trim()}>
+            {loading ? "ANALYZING..." : "ANALYZE THREAT"}
+          </button>
+        </form>
       </div>
 
-      {clientError && (
-        <div className="brutalist-card p-4 border-l-[8px] border-l-[#FF3B3B]">
-          <div className="text-xs font-bold uppercase text-[#FF3B3B]">ERROR: {clientError}</div>
-        </div>
-      )}
-
-      {/* CLIENT RESULT */}
-      {clientResult && (
-        <div className={`brutalist-card p-6 border-l-[8px] ${borderLeft(clientResult.threatLevel)} animate-brutalist-in`}>
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <div>
-              <h3 className="font-black uppercase tracking-wider">CLIENT-SIDE ANALYSIS</h3>
-              <p className="text-xs text-gray-500">Detected locally in browser</p>
-            </div>
-            <span className={`brutalist-badge ${badge(clientResult.threatLevel)}`}>{clientResult.threatLevel.toUpperCase()}</span>
+      {/* RESULT */}
+      {analysis && (
+        <div className="brutalist-card p-5 animate-fade-up">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-xs font-bold uppercase tracking-wider">ANALYSIS RESULT</h2>
+            <button onClick={() => setAnalysis(null)} className="text-[10px] font-bold uppercase hover:underline">CLEAR</button>
           </div>
-          <div className="grid gap-3 sm:grid-cols-3 mb-4">
-            <div className="border-[2px] border-black p-3">
-              <div className="text-[10px] font-bold uppercase text-gray-500">SENTIMENT</div>
-              <div className="font-bold text-sm">{clientResult.sentiment.label} ({(clientResult.sentiment.score * 100).toFixed(0)}%)</div>
+          <div className="space-y-3">
+            <div className="flex items-center gap-3">
+              <span className="text-xs font-bold uppercase tracking-wider">THREAT LEVEL:</span>
+              <span className={`border-[2px] border-black px-2 py-0.5 text-[10px] font-bold uppercase ${
+                analysis.threat_level === "high" ? "bg-[#FF3B3B] text-white" :
+                analysis.threat_level === "medium" ? "bg-[#FBBF24]" :
+                analysis.threat_level === "low" ? "bg-[#22C55E]" :
+                "bg-[#E8E4DA]"
+              }`}>{analysis.threat_level}</span>
+              <span className="text-xs font-bold">({Math.round(analysis.threat_score * 100)}%)</span>
             </div>
-            <div className="border-[2px] border-black p-3">
-              <div className="text-[10px] font-bold uppercase text-gray-500">URGENCY</div>
-              <div className="font-bold text-sm">{clientResult.urgencyScore}</div>
-            </div>
-            <div className="border-[2px] border-black p-3">
-              <div className="text-[10px] font-bold uppercase text-gray-500">FEAR</div>
-              <div className="font-bold text-sm">{clientResult.fearScore}</div>
-            </div>
-          </div>
-          {clientResult.triggers.length > 0 && (
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider mb-2">DETECTED TRIGGERS</div>
-              <div className="flex flex-wrap gap-2">
-                {clientResult.triggers.map((t: string) => (
-                  <span key={t} className="brutalist-badge bg-black text-[#FFFBF0] border-black">{t}</span>
-                ))}
+            {analysis.flagged_phrases && analysis.flagged_phrases.length > 0 && (
+              <div className="border-[2px] border-black p-3 bg-[#FFFBF0]">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">FLAGGED PHRASES</div>
+                <div className="flex flex-wrap gap-1">
+                  {analysis.flagged_phrases.map((p: string) => (
+                    <span key={p} className="border-[2px] border-black px-2 py-0.5 text-[10px] font-bold bg-[#FF3B3B] text-white">{p}</span>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* SERVER RESULT */}
-      {serverResult && (
-        <div className={`brutalist-card p-6 border-l-[8px] ${borderLeft(serverResult.threat_level)} animate-brutalist-in`}>
-          <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
-            <div>
-              <h3 className="font-black uppercase tracking-wider">SERVER-SIDE ANALYSIS</h3>
-              <p className="text-xs text-gray-500">Deep Python NLP analysis</p>
-            </div>
-            <span className={`brutalist-badge ${badge(serverResult.threat_level)}`}>{serverResult.threat_level.toUpperCase()}</span>
-          </div>
-          <div className="border-[2px] border-black p-3 mb-4">
-            <div className="text-[10px] font-bold uppercase text-gray-500 mb-1">ANALYSIS</div>
-            <p className="text-sm leading-relaxed">{serverResult.explanation}</p>
-          </div>
-          {serverResult.triggers.length > 0 && (
-            <div>
-              <div className="text-xs font-bold uppercase tracking-wider mb-2">DETECTED TRIGGERS</div>
-              <div className="flex flex-wrap gap-2">
-                {serverResult.triggers.map((t: string) => (
-                  <span key={t} className="brutalist-badge bg-black text-[#FFFBF0] border-black">{t}</span>
-                ))}
+            )}
+            {analysis.recommendations && analysis.recommendations.length > 0 && (
+              <div className="border-[2px] border-black p-3 bg-[#FFFBF0]">
+                <div className="text-[10px] font-bold uppercase tracking-wider text-gray-500 mb-2">RECOMMENDATIONS</div>
+                <ul className="space-y-1">
+                  {analysis.recommendations.map((r: string) => (
+                    <li key={r} className="text-xs flex gap-2"><span className="shrink-0">-</span><span>{r}</span></li>
+                  ))}
+                </ul>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       )}
 
-      {/* EXAMPLES */}
-      <div className="brutalist-card p-6">
-        <div className="text-xs font-bold uppercase tracking-wider mb-3">EXAMPLES TO TEST</div>
-        <div className="space-y-2">
-          {[
-            "URGENT: Your bank account has been compromised! Call 1-800-555-0199 immediately to secure your funds.",
-            "Hey! It has been a while. I am in trouble and need your help. Can you send me $500 through Venmo?",
-            "IRS NOTICE: You owe $12,500 in back taxes. A warrant will be issued unless you pay immediately via gift cards.",
-            "Congratulations! You have won a $1,000,000 lottery prize! Click here to claim before it expires.",
-          ].map((ex, i) => (
-            <button key={i} onClick={() => setInput(ex)} className="w-full text-left border-[2px] border-black p-3 text-xs hover:bg-black hover:text-[#FFFBF0] transition-colors duration-150 leading-relaxed">
-              &quot;{ex}&quot;
-            </button>
-          ))}
-        </div>
+      {/* HISTORY */}
+      <div className="brutalist-card p-5">
+        <h2 className="text-xs font-bold uppercase tracking-wider mb-4">ANALYSIS HISTORY</h2>
+        {history.length === 0 ? (
+          <div className="text-center py-8 text-gray-400 text-sm">No analyses yet. Paste a suspicious message above.</div>
+        ) : (
+          <div className="space-y-2">
+            {history.map((h) => (
+              <div key={h.id} className="border-[2px] border-black p-3">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className={`border-[2px] border-black px-2 py-0.5 text-[10px] font-bold uppercase ${
+                      h.threat_level === "high" ? "bg-[#FF3B3B] text-white" :
+                      h.threat_level === "medium" ? "bg-[#FBBF24]" :
+                      "bg-[#22C55E]"
+                    }`}>{h.threat_level}</span>
+                    <span className="text-xs font-bold">{Math.round(h.threat_score * 100)}%</span>
+                  </div>
+                  <span className="text-[10px] font-bold text-gray-400">{new Date(h.analyzed_at).toLocaleDateString()}</span>
+                </div>
+                <p className="text-xs text-gray-600 line-clamp-2">{h.input_text}</p>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

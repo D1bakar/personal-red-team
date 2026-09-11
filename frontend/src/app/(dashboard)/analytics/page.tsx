@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 interface Score {
   overall: number;
@@ -36,15 +37,13 @@ export default function AnalyticsPage() {
 
   useEffect(() => {
     setMounted(true);
-    const token = localStorage.getItem("token");
-    if (!token) return;
     Promise.all([
-      fetch("http://localhost:8000/api/v1/analytics/score", { headers: { Authorization: `Bearer ${token}` } }),
-      fetch("http://localhost:8000/api/v1/analytics/vulnerabilities", { headers: { Authorization: `Bearer ${token}` } }),
-    ]).then(async ([s, v]) => {
-      if (s.ok) setScore(await s.json());
-      if (v.ok) setVulns(await v.json());
-    }).catch(console.error).finally(() => setLoading(false));
+      api.getScore().catch(() => null),
+      api.getVulnerabilities().catch(() => null),
+    ]).then(([s, v]) => {
+      setScore(s);
+      setVulns(v);
+    }).finally(() => setLoading(false));
   }, []);
 
   if (loading) return <div className="flex items-center justify-center h-64"><div className="brutalist-tag animate-pulse">LOADING...</div></div>;

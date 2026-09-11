@@ -1,6 +1,7 @@
 import asyncio
 from src.core.database import engine, Base
 from src.models import User, Simulation, SimulationConfig, ThreatAnalysis, SecurityEvent
+from src.models.password_reset import PasswordReset
 
 
 async def init_db():

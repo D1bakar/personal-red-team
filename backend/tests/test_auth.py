@@ -1,5 +1,9 @@
 import pytest
 from httpx import AsyncClient
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from src.models.user import User
+from src.models.password_reset import PasswordReset
 
 
 @pytest.mark.asyncio
@@ -17,6 +21,7 @@ async def test_register_success(client: AsyncClient):
     assert "access_token" in data
     assert "refresh_token" in data
     assert data["user"]["email"] == "new@example.com"
+    assert data["user"]["is_verified"] is False
 
 
 @pytest.mark.asyncio
@@ -103,6 +108,151 @@ async def test_login_success(client: AsyncClient, test_user):
     data = response.json()
     assert "access_token" in data
     assert "refresh_token" in data
+
+
+@pytest.mark.asyncio
+async def test_login_unverified_user(client: AsyncClient, db_session: AsyncSession):
+    user = User(
+        email="unverified@example.com",
+        name="Unverified User",
+        hashed_password="dummy_hash",
+        is_verified=False,
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    from src.core.security import get_password_hash
+    user.hashed_password = get_password_hash("TestPass123!")
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/login",
+        data={"username": "unverified@example.com", "password": "TestPass123!"},
+    )
+    assert response.status_code == 403
+    assert "not verified" in response.json()["detail"].lower()
+
+
+@pytest.mark.asyncio
+async def test_verify_email(client: AsyncClient, db_session: AsyncSession):
+    user = User(
+        email="verify@example.com",
+        name="Verify User",
+        hashed_password="dummy_hash",
+        verification_token="test-token-123",
+    )
+    db_session.add(user)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"token": "test-token-123"},
+    )
+    assert response.status_code == 200
+
+    result = await db_session.execute(select(User).where(User.email == "verify@example.com"))
+    updated_user = result.scalar_one()
+    assert updated_user.is_verified is True
+    assert updated_user.verification_token is None
+
+
+@pytest.mark.asyncio
+async def test_verify_email_invalid_token(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/auth/verify-email",
+        json={"token": "invalid-token"},
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_forgot_password(client: AsyncClient, test_user):
+    response = await client.post(
+        "/api/v1/auth/forgot-password",
+        json={"email": "test@example.com"},
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_reset_password(client: AsyncClient, test_user, db_session: AsyncSession):
+    reset = PasswordReset.create_token(test_user.id, 30)
+    db_session.add(reset)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": reset.token, "password": "NewPass123!"},
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_reset_password_invalid_token(client: AsyncClient):
+    response = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": "invalid-token", "password": "NewPass123!"},
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_reset_password_weak_password(client: AsyncClient, test_user, db_session: AsyncSession):
+    reset = PasswordReset.create_token(test_user.id, 30)
+    db_session.add(reset)
+    await db_session.commit()
+
+    response = await client.post(
+        "/api/v1/auth/reset-password",
+        json={"token": reset.token, "password": "nouppercase1!"},
+    )
+    assert response.status_code == 400
+
+
+@pytest.mark.asyncio
+async def test_2fa_setup(client: AsyncClient, auth_headers):
+    response = await client.post("/api/v1/auth/2fa/setup", headers=auth_headers)
+    assert response.status_code == 200
+    data = response.json()
+    assert "secret" in data
+    assert "qr_code" in data
+    assert data["qr_code"].startswith("data:image/png;base64,")
+
+
+@pytest.mark.asyncio
+async def test_2fa_enable(client: AsyncClient, auth_headers):
+    setup_response = await client.post("/api/v1/auth/2fa/setup", headers=auth_headers)
+    secret = setup_response.json()["secret"]
+
+    import pyotp
+    totp = pyotp.TOTP(secret)
+    code = totp.now()
+
+    response = await client.post(
+        "/api/v1/auth/2fa/enable",
+        json={"token": "dummy", "code": code},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
+
+
+@pytest.mark.asyncio
+async def test_2fa_disable(client: AsyncClient, auth_headers, test_user, db_session: AsyncSession):
+    import pyotp
+    secret = pyotp.random_base32()
+    test_user.totp_secret = secret
+    test_user.mfa_enabled = True
+    await db_session.commit()
+
+    totp = pyotp.TOTP(secret)
+    code = totp.now()
+
+    response = await client.post(
+        "/api/v1/auth/2fa/disable",
+        json={"token": "dummy", "code": code},
+        headers=auth_headers,
+    )
+    assert response.status_code == 200
 
 
 @pytest.mark.asyncio

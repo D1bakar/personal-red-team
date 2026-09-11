@@ -1,62 +1,68 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, func
 from src.core.database import get_db
-from src.core.security import get_current_user
+from src.core.security import get_current_user, limiter
+from src.core.config import get_settings
 from src.models.user import User
-from src.models.simulation import Simulation, SimulationStatus
-from src.models.threat import ThreatAnalysis, ThreatLevel
+from src.models.simulation import Simulation
+from src.models.threat import ThreatAnalysis
 from src.services.scoring import ScoringService
 
+settings = get_settings()
 router = APIRouter(prefix="/analytics", tags=["analytics"])
 
 
 @router.get("/score")
-async def get_security_score(
+@limiter.limit(settings.RATE_LIMIT_API)
+async def get_score(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     scoring = ScoringService()
     score = await scoring.calculate_score(db, current_user.id)
-    return score
+    return {
+        "overall": score["overall"],
+        "simulation_success_rate": score["simulation_success_rate"],
+        "detection_accuracy": score["detection_accuracy"],
+        "learning_completion": score["learning_completion"],
+        "recency": score["recency"],
+    }
+
+
+@router.get("/stats")
+@limiter.limit(settings.RATE_LIMIT_API)
+async def get_stats(
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    sim_result = await db.execute(
+        select(func.count(Simulation.id)).where(Simulation.user_id == current_user.id)
+    )
+    total_sims = sim_result.scalar() or 0
+
+    analysis_result = await db.execute(
+        select(func.count(ThreatAnalysis.id)).where(ThreatAnalysis.user_id == current_user.id)
+    )
+    total_analyses = analysis_result.scalar() or 0
+
+    return {
+        "total_simulations": total_sims,
+        "total_analyses": total_analyses,
+        "total_revealed": total_sims,
+        "detection_rate": 100.0 if total_sims > 0 else 0,
+    }
 
 
 @router.get("/vulnerabilities")
+@limiter.limit(settings.RATE_LIMIT_API)
 async def get_vulnerabilities(
+    request: Request,
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ):
     scoring = ScoringService()
-    return await scoring.get_vulnerability_profile(db, current_user.id)
-
-
-@router.get("/stats")
-async def get_stats(
-    current_user: User = Depends(get_current_user),
-    db: AsyncSession = Depends(get_db),
-):
-    total_sims = await db.execute(
-        select(func.count()).select_from(Simulation).where(Simulation.user_id == current_user.id)
-    )
-    interacted = await db.execute(
-        select(func.count()).select_from(Simulation).where(
-            Simulation.user_id == current_user.id,
-            Simulation.status == SimulationStatus.INTERACTED,
-        )
-    )
-    total_analyses = await db.execute(
-        select(func.count()).select_from(ThreatAnalysis).where(ThreatAnalysis.user_id == current_user.id)
-    )
-    danger_detected = await db.execute(
-        select(func.count()).select_from(ThreatAnalysis).where(
-            ThreatAnalysis.user_id == current_user.id,
-            ThreatAnalysis.threat_level == ThreatLevel.DANGER,
-        )
-    )
-
-    return {
-        "total_simulations": total_sims.scalar() or 0,
-        "interacted_simulations": interacted.scalar() or 0,
-        "total_analyses": total_analyses.scalar() or 0,
-        "threats_detected": danger_detected.scalar() or 0,
-    }
+    vulns = await scoring.get_vulnerability_profile(db, current_user.id)
+    return dict(vulns)

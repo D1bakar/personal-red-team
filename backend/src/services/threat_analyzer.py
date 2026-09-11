@@ -107,6 +107,28 @@ class ThreatAnalyzer:
 
         threat_score = min(total_score / 15.0, 1.0)
 
+        flagged_phrases = []
+        text_lower = text.lower()
+        for kw in URGENCY_KEYWORDS + FEAR_KEYWORDS + AUTHORITY_KEYWORDS + GREED_KEYWORDS + SECRECY_KEYWORDS + CURIOSITY_KEYWORDS:
+            if kw in text_lower:
+                flagged_phrases.append(kw)
+
+        recommendations = []
+        if urgency_score >= 2:
+            recommendations.append("Do not act on time pressure - verify through official channels first")
+        if fear_score >= 2:
+            recommendations.append("Fear is a manipulation tactic - take time to think clearly")
+        if authority_score >= 2:
+            recommendations.append("Verify authority claims through independent contact methods")
+        if greed_score >= 2:
+            recommendations.append("If it sounds too good to be true, it probably is")
+        if secrecy_score >= 1:
+            recommendations.append("Legitimate opportunities never require secrecy")
+        if curiosity_score >= 1:
+            recommendations.append("Do not click links from unknown or suspicious sources")
+        if not recommendations:
+            recommendations.append("This message appears safe but always stay vigilant")
+
         explanation_parts = []
         if urgency_score >= 2:
             explanation_parts.append("Contains urgency language designed to rush your decision-making.")
@@ -129,7 +151,10 @@ class ThreatAnalyzer:
             threat_level=threat_level,
             threat_score=threat_score,
             triggers=triggers,
+            flagged_phrases=flagged_phrases,
+            recommendations=recommendations,
             explanation=" ".join(explanation_parts),
         )
+
         db.add(analysis)
         return analysis
