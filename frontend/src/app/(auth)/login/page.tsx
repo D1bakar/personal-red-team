@@ -1,68 +1,87 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { api } from "@/lib/api";
 
 export default function LoginPage() {
-  const router = useRouter();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+    setLoading(true);
+
     try {
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
-      const res = await fetch("http://localhost:8000/api/v1/auth/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: formData.toString(),
-      });
-      if (!res.ok) throw new Error("Invalid credentials");
-      const data = await res.json();
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      router.push("/");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Login failed");
+      await api.login(email, password);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Invalid email or password");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="brutalist-card p-8 animate-brutalist-in">
-      <h2 className="text-2xl font-black uppercase tracking-wider mb-1">WELCOME BACK</h2>
-      <p className="text-sm text-gray-500 mb-6">Sign in to your account</p>
-
-      {error && (
-        <div className="border-[3px] border-black bg-[#FF3B3B] p-3 mb-4 text-sm font-bold uppercase">{error}</div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-xs font-bold uppercase tracking-wider">Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="brutalist-input" placeholder="you@example.com" />
+    <div className="min-h-screen bg-[#FFFBF0] flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center border-[3px] border-black bg-black text-[#FFFBF0] text-xs font-black">PRT</div>
+          </Link>
+          <h1 className="text-3xl font-black uppercase tracking-tight">SIGN IN</h1>
+          <p className="text-sm text-gray-500 mt-2">Access your security dashboard</p>
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-bold uppercase tracking-wider">Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required className="brutalist-input" placeholder="********" />
-        </div>
-        <button type="submit" disabled={loading} className="brutalist-btn w-full">
-          {loading ? "SIGNING IN..." : "SIGN IN"}
-        </button>
-      </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
-        No account?{" "}
-        <Link href="/register" className="font-bold text-black underline decoration-[3px] decoration-black underline-offset-4 hover:bg-black hover:text-[#FFFBF0] px-1 transition-colors">Create one</Link>
-      </p>
+        <div className="brutalist-card p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="border-[3px] border-[#FF3B3B] bg-[#FF3B3B]/10 p-3 text-sm font-bold uppercase">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-1">EMAIL</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="brutalist-input w-full"
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-1">PASSWORD</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="brutalist-input w-full"
+                required
+                autoComplete="current-password"
+              />
+            </div>
+
+            <button type="submit" className="brutalist-btn w-full" disabled={loading}>
+              {loading ? "SIGNING IN..." : "SIGN IN"}
+            </button>
+          </form>
+
+          <div className="mt-4 text-center">
+            <Link href="/register" className="text-xs font-bold uppercase tracking-wider hover:underline">
+              Create Account
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

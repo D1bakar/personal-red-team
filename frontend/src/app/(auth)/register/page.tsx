@@ -1,73 +1,144 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import Link from "next/link";
+import { api } from "@/lib/api";
 
 export default function RegisterPage() {
-  const router = useRouter();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError("");
+
+    if (password !== confirm) {
+      setError("Passwords do not match");
+      return;
+    }
+
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters");
+      return;
+    }
+
+    if (!/[A-Z]/.test(password)) {
+      setError("Password must contain an uppercase letter");
+      return;
+    }
+
+    if (!/[a-z]/.test(password)) {
+      setError("Password must contain a lowercase letter");
+      return;
+    }
+
+    if (!/\d/.test(password)) {
+      setError("Password must contain a digit");
+      return;
+    }
+
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      setError("Password must contain a special character");
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await fetch("http://localhost:8000/api/v1/auth/register", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
-      });
-      if (!res.ok) {
-        const data = await res.json();
-        throw new Error(data.detail || "Registration failed");
-      }
-      const data = await res.json();
-      localStorage.setItem("token", data.access_token);
-      localStorage.setItem("user", JSON.stringify(data.user));
-      router.push("/");
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Registration failed");
+      await api.register(email, name, password);
+      router.push("/dashboard");
+    } catch (err: any) {
+      setError(err.message || "Registration failed");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="brutalist-card p-8 animate-brutalist-in">
-      <h2 className="text-2xl font-black uppercase tracking-wider mb-1">CREATE ACCOUNT</h2>
-      <p className="text-sm text-gray-500 mb-6">Join the defense force</p>
-
-      {error && (
-        <div className="border-[3px] border-black bg-[#FF3B3B] p-3 mb-4 text-sm font-bold uppercase">{error}</div>
-      )}
-
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="mb-1 block text-xs font-bold uppercase tracking-wider">Name</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} required className="brutalist-input" placeholder="John Doe" />
+    <div className="min-h-screen bg-[#FFFBF0] flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="text-center mb-8">
+          <Link href="/" className="inline-flex items-center gap-2 mb-6">
+            <div className="flex h-10 w-10 items-center justify-center border-[3px] border-black bg-black text-[#FFFBF0] text-xs font-black">PRT</div>
+          </Link>
+          <h1 className="text-3xl font-black uppercase tracking-tight">CREATE ACCOUNT</h1>
+          <p className="text-sm text-gray-500 mt-2">Start your security training</p>
         </div>
-        <div>
-          <label className="mb-1 block text-xs font-bold uppercase tracking-wider">Email</label>
-          <input type="email" value={email} onChange={(e) => setEmail(e.target.value)} required className="brutalist-input" placeholder="you@example.com" />
-        </div>
-        <div>
-          <label className="mb-1 block text-xs font-bold uppercase tracking-wider">Password</label>
-          <input type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} className="brutalist-input" placeholder="min 8 characters" />
-        </div>
-        <button type="submit" disabled={loading} className="brutalist-btn w-full">
-          {loading ? "CREATING..." : "CREATE ACCOUNT"}
-        </button>
-      </form>
 
-      <p className="mt-6 text-center text-sm text-gray-500">
-        Already have an account?{" "}
-        <Link href="/login" className="font-bold text-black underline decoration-[3px] decoration-black underline-offset-4 hover:bg-black hover:text-[#FFFBF0] px-1 transition-colors">Sign in</Link>
-      </p>
+        <div className="brutalist-card p-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {error && (
+              <div className="border-[3px] border-[#FF3B3B] bg-[#FF3B3B]/10 p-3 text-sm font-bold uppercase">
+                {error}
+              </div>
+            )}
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-1">NAME</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className="brutalist-input w-full"
+                required
+                autoComplete="name"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-1">EMAIL</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="brutalist-input w-full"
+                required
+                autoComplete="email"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-1">PASSWORD</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                className="brutalist-input w-full"
+                required
+                autoComplete="new-password"
+                minLength={8}
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold uppercase tracking-wider mb-1">CONFIRM PASSWORD</label>
+              <input
+                type="password"
+                value={confirm}
+                onChange={(e) => setConfirm(e.target.value)}
+                className="brutalist-input w-full"
+                required
+                autoComplete="new-password"
+              />
+            </div>
+
+            <button type="submit" className="brutalist-btn w-full" disabled={loading}>
+              {loading ? "CREATING ACCOUNT..." : "CREATE ACCOUNT"}
+            </button>
+          </form>
+
+          <div className="mt-4 text-center">
+            <Link href="/login" className="text-xs font-bold uppercase tracking-wider hover:underline">
+              Sign In
+            </Link>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }

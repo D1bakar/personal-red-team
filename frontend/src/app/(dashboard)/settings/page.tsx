@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { api } from "@/lib/api";
 
 export default function SettingsPage() {
   const [user, setUser] = useState<any>(null);
@@ -11,11 +12,20 @@ export default function SettingsPage() {
 
   useEffect(() => {
     setMounted(true);
-    const userData = localStorage.getItem("user");
-    if (userData) setUser(JSON.parse(userData));
+    api.getMe().then(setUser).catch(() => {});
   }, []);
 
-  const handleSave = () => { setSaved(true); setTimeout(() => setSaved(false), 2000); };
+  const handleSave = () => {
+    setSaved(true);
+    setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleLogout = () => {
+    api.clearTokens();
+    window.location.href = "/login";
+  };
+
+  if (!mounted) return null;
 
   return (
     <div className="space-y-6">
@@ -90,6 +100,24 @@ export default function SettingsPage() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* Security */}
+        <div className="brutalist-card p-6 animate-fade-up stagger-4 opacity-0">
+          <div className="text-xs font-bold uppercase tracking-wider text-gray-500 mb-4">SECURITY</div>
+          <div className="space-y-3">
+            <div className="border-[2px] border-black p-3">
+              <div className="text-[10px] font-bold uppercase text-gray-500">SESSION</div>
+              <div className="font-bold text-sm">Active</div>
+            </div>
+            <div className="border-[2px] border-black p-3">
+              <div className="text-[10px] font-bold uppercase text-gray-500">TOKEN EXPIRY</div>
+              <div className="font-bold text-sm">30 minutes</div>
+            </div>
+            <button onClick={handleLogout} className="brutalist-btn w-full bg-[#FF3B3B] hover:bg-[#E83333]">
+              SIGN OUT
+            </button>
           </div>
         </div>
       </div>
